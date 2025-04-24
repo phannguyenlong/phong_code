@@ -1,12 +1,15 @@
+// src/components/SideBar.jsx
 import { Image, Text, Group, Button, TextInput, Stack, NavLink } from '@mantine/core';
-import { IconSearch, IconHome, IconUser, IconFolders } from '@tabler/icons-react';
+import { IconSearch, IconHome, IconUser, IconFolders, IconLogout, IconPlus } from '@tabler/icons-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 function SideBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const { isAuthenticated, currentUser, logout } = useAuth();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -17,7 +20,6 @@ function SideBar() {
 
   return (
     <div className="sidebar">
-
       <form onSubmit={handleSearch}>
         <TextInput
           placeholder="Search"
@@ -59,17 +61,46 @@ function SideBar() {
         />
       </Stack>
 
-      <Text size="sm" mt={20} color="gray">
-        To start creating your recipe library, please{' '}
-        <Text component={Link} to="/register" c="blue" inherit>
-          register
-        </Text>{' '}
-        or{' '}
-        <Text component={Link} to="/login" c="blue" inherit>
-          login
+      {isAuthenticated ? (
+        <div>
+          <Text size="sm" fw={500} mt={30} mb={10}>
+            Welcome, {currentUser.username}!
+          </Text>
+          
+          <Button 
+            leftSection={<IconPlus size={16} />} 
+            color="orange" 
+            fullWidth 
+            mb={10}
+            component={Link}
+            to="/create-recipe"
+          >
+            Create Recipe
+          </Button>
+          
+          <Button 
+            leftSection={<IconLogout size={16} />} 
+            variant="subtle" 
+            color="gray" 
+            fullWidth
+            onClick={() => logout()}
+          >
+            Logout
+          </Button>
+        </div>
+      ) : (
+        <Text size="sm" mt={20} color="gray">
+          To start creating your recipe library, please{' '}
+          <Text component={Link} to="/register" c="blue" inherit>
+            register
+          </Text>{' '}
+          or{' '}
+          <Text component={Link} to="/login" c="blue" inherit>
+            login
+          </Text>
+          .
         </Text>
-        .
-      </Text>
+      )}
     </div>
   );
 }

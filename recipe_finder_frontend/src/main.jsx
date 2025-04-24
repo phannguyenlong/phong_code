@@ -1,3 +1,4 @@
+// src/main.jsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -24,11 +25,12 @@ const theme = createTheme({
   },
 });
 
-
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <MantineProvider withGlobalStyles withNormalizeCSS theme={theme}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </MantineProvider>
+  <React.StrictMode>
+    <MantineProvider withGlobalStyles withNormalizeCSS theme={theme}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </MantineProvider>
+  </React.StrictMode>
 );

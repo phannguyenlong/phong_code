@@ -1,8 +1,10 @@
+// src/App.jsx
 import React from 'react';
-
 import { Divider } from '@mantine/core';
 import { Routes, Route } from 'react-router-dom';
 
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import SideBar from './components/SideBar';
 
@@ -19,23 +21,49 @@ import './App.css';
 
 function App() {
   return (
-    <div className="app-container">
-      <SideBar />
-      <div className="content">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/account" element={<AccountPage />} />
-          <Route path="/recipes" element={<RecipePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/recipe/:id" element={<RecipeDetailPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/create-recipe" element={<CreateRecipePage />} />
-        </Routes>
-        <Divider my="xs" labelPosition="center" />
-        <Footer />
+    <AuthProvider>
+      <div className="app-container">
+        <SideBar />
+        <div className="content">
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/recipe/:id" element={<RecipeDetailPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            
+            {/* Protected routes */}
+            <Route 
+              path="/account" 
+              element={
+                <ProtectedRoute>
+                  <AccountPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/recipes" 
+              element={
+                <ProtectedRoute>
+                  <RecipePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/create-recipe" 
+              element={
+                <ProtectedRoute>
+                  <CreateRecipePage />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+          <Divider my="xs" labelPosition="center" />
+          <Footer />
+        </div>
       </div>
-    </div>
+    </AuthProvider>
   );
 }
 

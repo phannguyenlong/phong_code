@@ -1,23 +1,46 @@
+// src/pages/LoginPage.jsx
 import { useState } from 'react';
-import { Paper, Title, TextInput, PasswordInput, Button, Group, Text, Divider, Anchor, Center } from '@mantine/core';
-import { IconAt, IconLock, IconBrandGoogle, IconBrandFacebook } from '@tabler/icons-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Paper, Title, TextInput, PasswordInput, Button, Group, Text, Divider, Anchor, Center, Alert } from '@mantine/core';
+import { IconAt, IconLock, IconBrandGoogle, IconBrandFacebook, IconAlertCircle } from '@tabler/icons-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+  
+  // Get the page to redirect to after login, or default to home
+  const from = location.state?.from?.pathname || '/';
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
+    // Basic validation
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
     setLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      // Call the login method from auth context
+      await login(email, password);
+      
+      // Redirect to the page the user was trying to access, or home
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
       setLoading(false);
-      navigate('/'); // Redirect to home page after login
-    }, 1000);
+    }
   };
 
   return (
@@ -26,6 +49,17 @@ function LoginPage() {
         <Title order={2} ta="center" mt="md" mb={30}>
           Welcome back to Recipe Finder
         </Title>
+
+        {error && (
+          <Alert 
+            icon={<IconAlertCircle size={16} />} 
+            title="Authentication Error" 
+            color="red" 
+            mb="md"
+          >
+            {error}
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit}>
           <TextInput

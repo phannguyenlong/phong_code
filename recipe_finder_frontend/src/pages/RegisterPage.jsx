@@ -1,36 +1,55 @@
+// src/pages/RegisterPage.jsx
 import { useState } from 'react';
-import { Paper, Title, TextInput, PasswordInput, Button, Group, Text, Divider, Anchor, Center, Checkbox } from '@mantine/core';
-import { IconAt, IconLock, IconUser, IconBrandGoogle, IconBrandFacebook } from '@tabler/icons-react';
+import { Paper, Title, TextInput, PasswordInput, Button, Group, Text, Divider, Anchor, Center, Checkbox, Alert } from '@mantine/core';
+import { IconAt, IconLock, IconUser, IconBrandGoogle, IconBrandFacebook, IconAlertCircle } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function RegisterPage() {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
   const navigate = useNavigate();
+  const { register } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
+    // Basic validation
+    if (!username.trim() || !email.trim() || !password.trim()) {
+      setError('Please fill in all required fields');
+      return;
+    }
+    
     if (password !== confirmPassword) {
-      alert("Passwords don't match");
+      setError("Passwords don't match");
       return;
     }
     
     if (!terms) {
-      alert("You must accept the terms and conditions");
+      setError("You must accept the terms and conditions");
       return;
     }
     
     setLoading(true);
     
-    // Simulate registration process
-    setTimeout(() => {
+    try {
+      // Call the register method from auth context
+      await register(username, email, password);
+      
+      // Redirect to home page after registration
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
       setLoading(false);
-      navigate('/'); // Redirect to home page after registration
-    }, 1000);
+    }
   };
 
   return (
@@ -40,13 +59,24 @@ function RegisterPage() {
           Create a Recipe Finder Account
         </Title>
 
+        {error && (
+          <Alert 
+            icon={<IconAlertCircle size={16} />} 
+            title="Registration Error" 
+            color="red" 
+            mb="md"
+          >
+            {error}
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit}>
           <TextInput
-            label="Name"
-            placeholder="Your name"
+            label="Username"
+            placeholder="Your username"
             size="md"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             leftSection={<IconUser size={16} />}
             required
             mb="md"
