@@ -52,7 +52,6 @@ export const updateUserProfile = async (req, res) => {
         location: updatedUser.location,
         avatar: updatedUser.avatar,
         preferences: updatedUser.preferences,
-        token: generateToken(updatedUser._id)
       });
     } else {
       res.status(404).json({ message: 'User not found' });

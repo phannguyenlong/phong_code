@@ -1,5 +1,5 @@
 // src/components/SideBar.jsx
-import { Image, Text, Group, Button, TextInput, Stack, NavLink } from '@mantine/core';
+import { Image, Text, Group, Button, TextInput, Stack, NavLink, Divider } from '@mantine/core';
 import { IconSearch, IconHome, IconUser, IconFolders, IconLogout, IconPlus } from '@tabler/icons-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -60,6 +60,8 @@ function SideBar() {
           active={location.pathname === '/recipes'}
         />
       </Stack>
+
+      <Divider my="sm"/>
 
       {isAuthenticated ? (
         <div>

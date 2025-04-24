@@ -11,9 +11,9 @@ function Footer() {
           <Grid.Col span={{ base: 12, md: 3 }}>
             <Box mb="md">
               <Image
-                src="https://static.cookpad.com/global/logo.png"
+                src="/logo.png"
                 alt="Recipe Finder"
-                width={120}
+                width={50}
               />
             </Box>
             <Text size="sm" color="dimmed" mb="lg">

@@ -17,9 +17,9 @@ function Header() {
       <Group>
         <Link to="/">
           <Image 
-            src="https://static.cookpad.com/global/logo.png"
+            src="/logo.png"
             alt="Recipe Finder"
-            width={100}
+            height={60}
           />
         </Link>
       </Group>
@@ -47,9 +47,6 @@ function Header() {
               </Menu.Item>
               <Menu.Item leftSection={<IconBookmark size={14} />} component={Link} to="/recipes?tab=saved">
                 Saved Recipes
-              </Menu.Item>
-              <Menu.Item leftSection={<IconSettings size={14} />} component={Link} to="/account">
-                Settings
               </Menu.Item>
               <Menu.Divider />
               <Menu.Item leftSection={<IconLogout size={14} />} onClick={handleLogout} color="red">

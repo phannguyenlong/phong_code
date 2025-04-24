@@ -1,8 +1,12 @@
-import { useState } from 'react';
+// src/pages/CreateRecipePage.jsx
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Title, TextInput, Textarea, NumberInput, Select, MultiSelect, Button, Group, Paper, Divider, FileInput, Text, ActionIcon, SimpleGrid, Switch } from '@mantine/core';
-import { IconArrowLeft, IconUpload, IconTrash, IconPlus } from '@tabler/icons-react';
+import { Box, Title, TextInput, Textarea, NumberInput, Select, MultiSelect, Button, Group, Paper, Divider, FileInput, Text, ActionIcon, SimpleGrid, Switch, Alert, Loader } from '@mantine/core';
+import { IconArrowLeft, IconUpload, IconTrash, IconPlus, IconAlertCircle, IconCheck } from '@tabler/icons-react';
 import Header from '../components/Header';
+import recipeService from '../services/recipe-service';
+import categoryService from '../services/category-service';
+import uploadService from '../services/upload-service';
 
 function CreateRecipePage() {
   const navigate = useNavigate();
@@ -15,14 +19,16 @@ function CreateRecipePage() {
   const [cookTime, setCookTime] = useState(30);
   const [difficulty, setDifficulty] = useState('Medium');
   const [cuisine, setCuisine] = useState('');
+  const [category, setCategory] = useState('');
   const [tags, setTags] = useState([]);
   const [mainImage, setMainImage] = useState(null);
+  const [mainImageUrl, setMainImageUrl] = useState('');
 
   // Ingredients state
   const [ingredients, setIngredients] = useState([{ id: 1, name: '', amount: '', unit: '' }]);
 
   // Instructions state
-  const [steps, setSteps] = useState([{ id: 1, description: '', image: null }]);
+  const [steps, setSteps] = useState([{ id: 1, description: '', image: null, imageUrl: '' }]);
 
   // Recipe notes
   const [notes, setNotes] = useState('');
@@ -35,14 +41,21 @@ function CreateRecipePage() {
 
   // Privacy settings
   const [isPublic, setIsPublic] = useState(true);
-
-  const difficultyOptions = [
+  
+  // UI states
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  
+  // Form options
+  const [difficultyOptions] = useState([
     { value: 'Easy', label: 'Easy' },
     { value: 'Medium', label: 'Medium' },
     { value: 'Hard', label: 'Hard' }
-  ];
+  ]);
 
-  const cuisineOptions = [
+  const [cuisineOptions] = useState([
     { value: 'Italian', label: 'Italian' },
     { value: 'Mexican', label: 'Mexican' },
     { value: 'Chinese', label: 'Chinese' },
@@ -53,9 +66,9 @@ function CreateRecipePage() {
     { value: 'Mediterranean', label: 'Mediterranean' },
     { value: 'American', label: 'American' },
     { value: 'Other', label: 'Other' }
-  ];
+  ]);
 
-  const unitOptions = [
+  const [unitOptions] = useState([
     { value: 'g', label: 'grams (g)' },
     { value: 'kg', label: 'kilograms (kg)' },
     { value: 'ml', label: 'milliliters (ml)' },
@@ -68,9 +81,9 @@ function CreateRecipePage() {
     { value: 'pinch', label: 'pinch' },
     { value: 'piece', label: 'piece(s)' },
     { value: '', label: 'none' }
-  ];
+  ]);
 
-  const tagOptions = [
+  const [tagOptions] = useState([
     { value: 'Vegetarian', label: 'Vegetarian' },
     { value: 'Vegan', label: 'Vegan' },
     { value: 'Gluten-Free', label: 'Gluten-Free' },
@@ -91,7 +104,28 @@ function CreateRecipePage() {
     { value: 'Appetizer', label: 'Appetizer' },
     { value: 'Side Dish', label: 'Side Dish' },
     { value: 'Main Course', label: 'Main Course' }
-  ];
+  ]);
+  
+  const [categoryOptions, setCategoryOptions] = useState([]);
+
+  // Fetch categories when component mounts
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await categoryService.getCategories();
+        const formattedCategories = categoriesData.map(cat => ({
+          value: cat.name,
+          label: cat.name
+        }));
+        setCategoryOptions(formattedCategories);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        setError('Failed to load categories. Please try again.');
+      }
+    };
+    
+    fetchCategories();
+  }, []);
 
   // Handler functions
   const handleGoBack = () => {
@@ -117,7 +151,7 @@ function CreateRecipePage() {
 
   const addStep = () => {
     const newId = steps.length > 0 ? Math.max(...steps.map(s => s.id)) + 1 : 1;
-    setSteps([...steps, { id: newId, description: '', image: null }]);
+    setSteps([...steps, { id: newId, description: '', image: null, imageUrl: '' }]);
   };
 
   const removeStep = (id) => {
@@ -132,56 +166,115 @@ function CreateRecipePage() {
     ));
   };
 
-  const handleSubmit = (e) => {
+  const handleUploadMainImage = async (file) => {
+    if (!file) return;
+    
+    setUploading(true);
+    setError('');
+    
+    try {
+      const response = await uploadService.uploadImage(file);
+      setMainImageUrl(response.imageUrl);
+      setUploading(false);
+    } catch (err) {
+      console.error('Error uploading main image:', err);
+      setError('Failed to upload image. Please try again.');
+      setUploading(false);
+    }
+  };
+
+  const handleUploadStepImage = async (file, stepId) => {
+    if (!file) return;
+    
+    setUploading(true);
+    setError('');
+    
+    try {
+      const response = await uploadService.uploadImage(file);
+      
+      // Update the step with the new image URL
+      setSteps(steps.map(step =>
+        step.id === stepId ? { ...step, imageUrl: response.imageUrl } : step
+      ));
+      
+      setUploading(false);
+    } catch (err) {
+      console.error('Error uploading step image:', err);
+      setError('Failed to upload image. Please try again.');
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
 
     // Form validation
     if (!recipeTitle) {
-      alert('Please enter a recipe title');
+      setError('Please enter a recipe title');
+      setLoading(false);
       return;
     }
 
     if (!recipeDescription) {
-      alert('Please enter a recipe description');
+      setError('Please enter a recipe description');
+      setLoading(false);
       return;
     }
 
     if (ingredients.some(ingredient => !ingredient.name)) {
-      alert('Please fill in all ingredient names');
+      setError('Please fill in all ingredient names');
+      setLoading(false);
       return;
     }
 
     if (steps.some(step => !step.description)) {
-      alert('Please fill in all instruction steps');
+      setError('Please fill in all instruction steps');
+      setLoading(false);
       return;
     }
 
-    // In a real app, you would submit the form data to a server
-    // For this example, we'll just log it and navigate to the home page
-    console.log({
-      title: recipeTitle,
-      description: recipeDescription,
-      servings,
-      prepTime,
-      cookTime,
-      difficulty,
-      cuisine,
-      tags,
-      mainImage,
-      ingredients,
-      steps,
-      notes,
-      nutrition: {
-        calories,
-        protein,
-        carbs,
-        fat
-      },
-      isPublic
-    });
-
-    // Navigate to home page after submission
-    navigate('/');
+    try {
+      // Prepare recipe data for submission
+      const recipeData = {
+        title: recipeTitle,
+        description: recipeDescription,
+        ingredients: ingredients.map(({ name, amount, unit }) => ({ name, amount, unit })),
+        steps: steps.map(({ description, imageUrl }) => ({ description, image: imageUrl })),
+        prepTime,
+        cookTime,
+        servings,
+        difficulty,
+        cuisine,
+        category,
+        tags,
+        mainImage: mainImageUrl,
+        notes,
+        isPublic,
+        nutrition: {
+          calories,
+          protein,
+          carbs,
+          fat
+        }
+      };
+      
+      const createdRecipe = await recipeService.createRecipe(recipeData);
+      
+      setSuccess('Recipe created successfully!');
+      
+      // Navigate to the recipe detail page after submission
+      setTimeout(() => {
+        navigate(`/recipe/${createdRecipe._id}`);
+      }, 1500);
+    } catch (err) {
+      console.error('Error creating recipe:', err);
+      setError(err.message || 'Failed to create recipe. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -198,6 +291,30 @@ function CreateRecipePage() {
         Back
       </Button>
       <Box p="xl">
+        {error && (
+          <Alert 
+            icon={<IconAlertCircle size={16} />} 
+            title="Error" 
+            color="red" 
+            mb="lg"
+            withCloseButton
+            onClose={() => setError('')}
+          >
+            {error}
+          </Alert>
+        )}
+        
+        {success && (
+          <Alert 
+            icon={<IconCheck size={16} />} 
+            title="Success" 
+            color="green" 
+            mb="lg"
+          >
+            {success}
+          </Alert>
+        )}
+        
         <Paper shadow="md" p="xl" withBorder>
           <Title order={1} mb="lg">Create New Recipe</Title>
 
@@ -270,6 +387,15 @@ function CreateRecipePage() {
                 onChange={setCuisine}
                 searchable
               />
+              
+              <Select
+                label="Category"
+                placeholder="Select recipe category"
+                data={categoryOptions}
+                value={category}
+                onChange={setCategory}
+                searchable
+              />
             </Group>
 
             <MultiSelect
@@ -287,10 +413,25 @@ function CreateRecipePage() {
               placeholder="Upload a photo of your finished dish"
               accept="image/*"
               value={mainImage}
-              onChange={setMainImage}
+              onChange={(file) => {
+                setMainImage(file);
+                handleUploadMainImage(file);
+              }}
               icon={<IconUpload size={14} />}
               mb="xl"
+              disabled={uploading}
             />
+            
+            {mainImageUrl && (
+              <Box mb="xl">
+                <Text size="sm" mb="xs">Preview:</Text>
+                <img 
+                  src={mainImageUrl} 
+                  alt="Recipe preview" 
+                  style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} 
+                />
+              </Box>
+            )}
 
             <Divider my="xl" />
 
@@ -377,9 +518,24 @@ function CreateRecipePage() {
                   placeholder="Add photo for this step (optional)"
                   accept="image/*"
                   value={step.image}
-                  onChange={(file) => updateStep(step.id, 'image', file)}
+                  onChange={(file) => {
+                    updateStep(step.id, 'image', file);
+                    handleUploadStepImage(file, step.id);
+                  }}
                   icon={<IconUpload size={14} />}
+                  disabled={uploading}
                 />
+                
+                {step.imageUrl && (
+                  <Box mt="md">
+                    <Text size="sm" mb="xs">Preview:</Text>
+                    <img 
+                      src={step.imageUrl} 
+                      alt={`Step ${index + 1} preview`} 
+                      style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain' }} 
+                    />
+                  </Box>
+                )}
               </Box>
             ))}
 
@@ -460,7 +616,11 @@ function CreateRecipePage() {
               <Button variant="outline" onClick={() => navigate('/')}>
                 Cancel
               </Button>
-              <Button type="submit" color="orange">
+              <Button 
+                type="submit" 
+                color="orange"
+                loading={loading || uploading}
+              >
                 Publish Recipe
               </Button>
             </Group>
