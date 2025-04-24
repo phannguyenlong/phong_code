@@ -51,6 +51,7 @@ export const uploadImage = (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
     
+    // Return a complete path that can be used directly by the frontend
     res.json({
       imageUrl: `/${req.file.path}`
     });

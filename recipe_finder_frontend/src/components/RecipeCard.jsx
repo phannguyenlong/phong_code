@@ -5,6 +5,7 @@ import { IconHeart, IconBookmark, IconStar } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services';
+import imageUtils from '../utils/image-utils';
 
 function RecipeCard({ id, image, title, author, rating, hideFooter = false, isFavorite: initialIsFavorite = false, isBookmarked: initialIsBookmarked = false }) {
   const navigate = useNavigate();
@@ -12,6 +13,9 @@ function RecipeCard({ id, image, title, author, rating, hideFooter = false, isFa
   
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
+
+  // Get the full image URL
+  const imageUrl = imageUtils.getFullImageUrl(image);
 
   const handleToggleFavorite = async (e) => {
     e.preventDefault();
@@ -62,10 +66,10 @@ function RecipeCard({ id, image, title, author, rating, hideFooter = false, isFa
       <Card.Section>
         <Link to={`/recipe/${id}`}>
           <Image
-            src={image}
+            src={imageUrl}
             height={160}
             alt={title}
-            fallbackSrc="https://via.placeholder.com/400x400?text=No+Image"
+            fallbackSrc={imageUtils.fallbackImage}
           />
         </Link>
       </Card.Section>

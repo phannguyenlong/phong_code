@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import recipeService from '../services/recipe-service';
 import categoryService from '../services/category-service';
 import uploadService from '../services/upload-service';
+import imageUtils from '../utils/image-utils';
 
 function CreateRecipePage() {
   const navigate = useNavigate();
@@ -426,7 +427,7 @@ function CreateRecipePage() {
               <Box mb="xl">
                 <Text size="sm" mb="xs">Preview:</Text>
                 <img 
-                  src={mainImageUrl} 
+                  src={imageUtils.getFullImageUrl(mainImageUrl)} 
                   alt="Recipe preview" 
                   style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} 
                 />
@@ -530,7 +531,7 @@ function CreateRecipePage() {
                   <Box mt="md">
                     <Text size="sm" mb="xs">Preview:</Text>
                     <img 
-                      src={step.imageUrl} 
+                      src={imageUtils.getFullImageUrl(step.imageUrl)} 
                       alt={`Step ${index + 1} preview`} 
                       style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain' }} 
                     />

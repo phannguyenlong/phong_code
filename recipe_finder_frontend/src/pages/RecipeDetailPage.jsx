@@ -8,6 +8,7 @@ import recipeService from '../services/recipe-service';
 import commentService from '../services/comment-service';
 import userService from '../services/user-service';
 import { useAuth } from '../context/AuthContext';
+import imageUtils from '../utils/image-utils';
 
 function RecipeDetailPage() {
   const { id } = useParams();
@@ -258,12 +259,12 @@ function RecipeDetailPage() {
               </Group>
 
               <Image
-                src={recipe.mainImage}
+                src={imageUtils.getFullImageUrl(recipe.mainImage)}
                 height={400}
                 radius="md"
                 alt={recipe.title}
                 mb="lg"
-                fallbackSrc="https://via.placeholder.com/400x400?text=No+Image"
+                fallbackSrc={imageUtils.fallbackImage}
               />
 
               <Group mb="lg" position="apart">
@@ -370,11 +371,12 @@ function RecipeDetailPage() {
                         {step.description}
                         {step.image && (
                           <Image
-                            src={step.image}
+                            src={imageUtils.getFullImageUrl(step.image)}
                             height={200}
                             radius="md"
                             mt="sm"
                             fit="contain"
+                            fallbackSrc={imageUtils.fallbackImage}
                           />
                         )}
                       </List.Item>
@@ -507,21 +509,21 @@ function RecipeDetailPage() {
               <Title order={3} mb="md">You Might Also Like</Title>
 
               {relatedRecipes.length > 0 ? (
-                relatedRecipes.map((recipe) => (
-                  <Group key={recipe._id} mb="md" noWrap>
+                relatedRecipes.map((relatedRecipe) => (
+                  <Group key={relatedRecipe._id} mb="md" noWrap>
                     <Image
-                      src={recipe.mainImage}
+                      src={imageUtils.getFullImageUrl(relatedRecipe.mainImage)}
                       width={80}
                       height={60}
                       radius="md"
-                      alt={recipe.title}
-                      fallbackSrc="https://via.placeholder.com/80x60?text=No+Image"
+                      alt={relatedRecipe.title}
+                      fallbackSrc={imageUtils.fallbackImage}
                     />
                     <Box>
-                      <Text fw={500} component={Link} to={`/recipe/${recipe._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                        {recipe.title}
+                      <Text fw={500} component={Link} to={`/recipe/${relatedRecipe._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        {relatedRecipe.title}
                       </Text>
-                      <Rating value={recipe.rating || 0} readOnly size="xs" />
+                      <Rating value={relatedRecipe.rating || 0} readOnly size="xs" />
                     </Box>
                   </Group>
                 ))
@@ -539,7 +541,7 @@ function RecipeDetailPage() {
         </Grid>
       </Box>
     </Box>
-  )
-};
+  );
+}
 
 export default RecipeDetailPage;
