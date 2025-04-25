@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   plugins: [react()],
   base: "/assignment2",
+  server: {
+    allowedHosts: ['n12122882.ifn666.com'], // 👈 Add your host here
+  },
   resolve: {
     alias: {
       '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs'
