@@ -2,7 +2,11 @@ import express from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import helmet from 'helmet';
+import mongoSanitize from 'express-mongo-sanitize';
+import moment from 'moment';
 
+import requestLogger from './src/middleware/loggerMiddleware.js';
 import authRoutes from './src/routes/authRoutes.js';
 import userRoutes from './src/routes/userRoute.js';
 import recipeRoutes from './src/routes/recipeRoutes.js';
@@ -14,11 +18,19 @@ import categoryRoutes from './src/routes/categoryRouates.js';
 dotenv.config();
 const app = express();
 
+// Use request logging middleware globally
+app.use(requestLogger); 
+
+// Security middleware 
+app.use(helmet());         // Secure headers
+app.use(mongoSanitize());  // Prevent NoSQL injection
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
+
 
 // Routes
 app.use('/api/auth', authRoutes);

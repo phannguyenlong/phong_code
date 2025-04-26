@@ -14,6 +14,7 @@ function SearchPage() {
   const queryParam = searchParams.get('q') || '';
 
   const [searchQuery, setSearchQuery] = useState(queryParam);
+  const [searchError, setSearchError] = useState('');
   const [activeTab, setActiveTab] = useState('latest');
   
   const [withIngredients, setWithIngredients] = useState('');
@@ -37,6 +38,7 @@ function SearchPage() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
 
   // Fetch categories when component mounts
   useEffect(() => {
@@ -127,7 +129,7 @@ function SearchPage() {
                 style={{ width: '50%' }}
                 size="md"
                 leftSection={<IconSearch size={20} />}
-              />
+              />         
               <Button type="submit" color="orange" size="md">
                 Search
               </Button>

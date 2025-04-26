@@ -31,26 +31,40 @@ export const getRecipes = async (req, res) => {
       ? { tags: { $in: req.query.tags.split(',') } }
       : {};
       
-    const count = await Recipe.countDocuments({
+    // Combine filters
+    const filter = {
       ...keyword,
       ...category,
       ...cuisine,
       ...tags,
       isPublic: true
-    });
-    
-    const recipes = await Recipe.find({
-      ...keyword,
-      ...category,
-      ...cuisine,
-      ...tags,
-      isPublic: true
-    })
+    };
+
+    // Sorting
+    const sortBy = req.query.sort || '-createdAt'; // Default to descending by createdAt
+    const allowedSortFields = ['createdAt', '-createdAt', 'rating', '-rating', 'reviewCount', '-reviewCount'];
+
+    // Validate the sort parameter
+    if (!allowedSortFields.includes(sortBy)) {
+      return res.status(400).json({ message: 'Invalid sort parameter' });
+    }
+
+    // Count the total number of matching recipes
+    const count = await Recipe.countDocuments(filter);
+
+    // Fetch recipes with filters, pagination, and sorting
+    const recipes = await Recipe.find(filter)
       .populate('createdBy', 'username avatar')
       .limit(pageSize)
       .skip(pageSize * (page - 1))
-      .sort({ createdAt: -1 });
-    
+      .sort(sortBy);
+
+    // If no recipes are found
+    if (recipes.length === 0) {
+      return res.status(404).json({ message: 'No recipes found for your criteria.' });
+    }
+
+    // Respond with recipes, pagination info, and total count
     res.json({
       recipes,
       page,
