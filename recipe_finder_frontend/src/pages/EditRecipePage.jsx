@@ -179,9 +179,9 @@ function EditRecipePage() {
           setIngredients(formattedIngredients);
         }
         
-        // Set steps
-        if (recipeData.instructions && recipeData.instructions.length > 0) {
-          const formattedSteps = recipeData.instructions.map((step, index) => ({
+        // Set steps/instructions
+        if (recipeData.steps && recipeData.steps.length > 0) {
+          const formattedSteps = recipeData.steps.map((step, index) => ({
             id: index + 1,
             description: step.description || '',
             imageUrl: step.image || '',
