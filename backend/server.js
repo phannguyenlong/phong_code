@@ -1,29 +1,27 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
 import helmet from 'helmet';
-import mongoSanitize from 'express-mongo-sanitize';
-import moment from 'moment';
+import mongoose from 'mongoose';
 
 import requestLogger from './src/middleware/loggerMiddleware.js';
 import authRoutes from './src/routes/authRoutes.js';
-import userRoutes from './src/routes/userRoute.js';
-import recipeRoutes from './src/routes/recipeRoutes.js';
+import categoryRoutes from './src/routes/categoryRouates.js';
 import commentRoutes from './src/routes/commentRoute.js';
+import recipeRoutes from './src/routes/recipeRoutes.js';
 import searchRoutes from './src/routes/searchRoutes.js';
 import uploadRoutes from './src/routes/uploadRoutes.js';
-import categoryRoutes from './src/routes/categoryRouates.js';
+import userRoutes from './src/routes/userRoute.js';
 
 dotenv.config();
 const app = express();
 
 // Use request logging middleware globally
-app.use(requestLogger); 
+app.use(requestLogger);
 
 // Security middleware 
 app.use(helmet());         // Secure headers
-app.use(mongoSanitize());  // Prevent NoSQL injection
+// app.use(mongoSanitize());  // Prevent NoSQL injection
 
 // Middleware
 app.use(cors());
