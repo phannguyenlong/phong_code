@@ -49,22 +49,19 @@ function SearchPage() {
     const fetchCategories = async () => {
       try {
         const categoriesData = await categoryService.getCategories();
-        // Handle both direct array and { data: [...] } structure
+        // If the response is { data: [...] }, use .data, otherwise use the array directly
         const rawCategories = Array.isArray(categoriesData)
           ? categoriesData
-          : categoriesData.data || [];
+          : (categoriesData.data || []);
         const formattedCategories = rawCategories.map(category => ({
           value: category.name,
           label: category.name
         }));
         setCategories(formattedCategories);
-        console.log('Fetched categories:', formattedCategories);
       } catch (err) {
-        console.error('Error fetching categories:', err);
         setCategories([]);
       }
     };
-    
     fetchCategories();
   }, []);
 
