@@ -6,13 +6,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-._index.html
-._node_modules
-._package-lock.json
-._vite.config.js
-._.gitignore
-._vite.config.js
-src/._main.jsx
 
 node_modules
 dist
