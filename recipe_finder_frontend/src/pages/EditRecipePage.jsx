@@ -458,8 +458,7 @@ function EditRecipePage() {
           amount: amount.trim(),
           unit: unit || ''
         })).filter(ing => ing.name || ing.amount),
-        instructions: steps.map(({ description, imageUrl }, index) => ({
-          stepNumber: index + 1,
+        steps: steps.map(({ description, imageUrl }) => ({
           description: description.trim(),
           image: imageUrl || ''
         })).filter(step => step.description),

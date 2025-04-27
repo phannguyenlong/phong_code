@@ -387,7 +387,7 @@ function RecipeDetailPage() {
 
                   <Divider my="lg" />
 
-                  <Tabs value={activeTab} onTabChange={setActiveTab}>
+                  <Tabs value={activeTab} onChange={setActiveTab}>
                     <Tabs.List mb="md">
                       <Tabs.Tab value="ingredients">Ingredients</Tabs.Tab>
                       <Tabs.Tab value="instructions">Instructions</Tabs.Tab>
@@ -429,51 +429,49 @@ function RecipeDetailPage() {
                       </List>
                     </Tabs.Panel>
 
-                    {recipe.nutrition && (
-                      <Tabs.Panel value="nutrition">
-                        <Paper withBorder p="md" radius="md">
-                          <Title order={4} mb="sm">Nutrition Facts (per serving)</Title>
-                          <Grid>
-                            {recipe.nutrition.calories && (
-                              <Grid.Col span={6}>
-                                <Text fw={500}>Calories:</Text>
-                                <Text>{recipe.nutrition.calories}</Text>
-                              </Grid.Col>
-                            )}
-                            {recipe.nutrition.fat && (
-                              <Grid.Col span={6}>
-                                <Text fw={500}>Fat:</Text>
-                                <Text>{recipe.nutrition.fat}</Text>
-                              </Grid.Col>
-                            )}
-                            {recipe.nutrition.carbs && (
-                              <Grid.Col span={6}>
-                                <Text fw={500}>Carbohydrates:</Text>
-                                <Text>{recipe.nutrition.carbs}</Text>
-                              </Grid.Col>
-                            )}
-                            {recipe.nutrition.protein && (
-                              <Grid.Col span={6}>
-                                <Text fw={500}>Protein:</Text>
-                                <Text>{recipe.nutrition.protein}</Text>
-                              </Grid.Col>
-                            )}
-                            {recipe.nutrition.sodium && (
-                              <Grid.Col span={6}>
-                                <Text fw={500}>Sodium:</Text>
-                                <Text>{recipe.nutrition.sodium}</Text>
-                              </Grid.Col>
-                            )}
-                            {recipe.nutrition.fiber && (
-                              <Grid.Col span={6}>
-                                <Text fw={500}>Fiber:</Text>
-                                <Text>{recipe.nutrition.fiber}</Text>
-                              </Grid.Col>
-                            )}
-                          </Grid>
-                        </Paper>
-                      </Tabs.Panel>
-                    )}
+                    <Tabs.Panel value="nutrition">
+                      <Paper withBorder p="md" radius="md">
+                        <Title order={4} mb="sm">Nutrition Facts (per serving)</Title>
+                        <Grid>
+                          {recipe.nutrition?.calories && (
+                            <Grid.Col span={6}>
+                              <Text fw={500}>Calories:</Text>
+                              <Text>{recipe.nutrition.calories}</Text>
+                            </Grid.Col>
+                          )}
+                          {recipe.nutrition?.fat && (
+                            <Grid.Col span={6}>
+                              <Text fw={500}>Fat:</Text>
+                              <Text>{recipe.nutrition.fat}</Text>
+                            </Grid.Col>
+                          )}
+                          {recipe.nutrition?.carbs && (
+                            <Grid.Col span={6}>
+                              <Text fw={500}>Carbohydrates:</Text>
+                              <Text>{recipe.nutrition.carbs}</Text>
+                            </Grid.Col>
+                          )}
+                          {recipe.nutrition?.protein && (
+                            <Grid.Col span={6}>
+                              <Text fw={500}>Protein:</Text>
+                              <Text>{recipe.nutrition.protein}</Text>
+                            </Grid.Col>
+                          )}
+                          {recipe.nutrition?.sodium && (
+                            <Grid.Col span={6}>
+                              <Text fw={500}>Sodium:</Text>
+                              <Text>{recipe.nutrition.sodium}</Text>
+                            </Grid.Col>
+                          )}
+                          {recipe.nutrition?.fiber && (
+                            <Grid.Col span={6}>
+                              <Text fw={500}>Fiber:</Text>
+                              <Text>{recipe.nutrition.fiber}</Text>
+                            </Grid.Col>
+                          )}
+                        </Grid>
+                      </Paper>
+                    </Tabs.Panel>
                   </Tabs>
 
                   {recipe.notes && (
