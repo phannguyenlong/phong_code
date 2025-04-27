@@ -29,7 +29,6 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
 
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -44,6 +43,24 @@ app.use('/uploads', express.static('uploads'));
 mongoose.connect("mongodb://localhost:27017")
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
+
+// Handle 404 - Not Found
+app.use((req, res, next) => {
+  res.status(404).json({
+    statusCode: 404,
+    message: `Cannot ${req.method} ${req.originalUrl}`
+  });
+});
+
+// Handle 500 - Internal Server Error
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    statusCode: 500,
+    message: 'Internal Server Error'
+  });
+});
+
 
 // Start server
 const PORT = process.env.PORT || 5000;
