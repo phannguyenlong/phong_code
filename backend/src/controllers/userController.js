@@ -80,7 +80,14 @@ export const getUserRecipes = async (req, res) => {
 // @access  Private
 export const getUserFavorites = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('favorites');
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'favorites',
+        populate: {
+          path: 'createdBy',
+          select: 'username avatar'
+        }
+      });
     
     res.json(user.favorites);
   } catch (error) {
@@ -132,7 +139,14 @@ export const removeFromFavorites = async (req, res) => {
 // @access  Private
 export const getUserBookmarks = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('bookmarks');
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'bookmarks',
+        populate: {
+          path: 'createdBy',
+          select: 'username avatar'
+        }
+      });
     
     res.json(user.bookmarks);
   } catch (error) {
