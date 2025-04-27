@@ -1,6 +1,7 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
 
@@ -16,6 +17,25 @@ import userRoutes from './src/routes/userRoute.js';
 dotenv.config();
 const app = express();
 
+// Rate limiters
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // Limit each IP to 5 login attempts per hour
+  message: 'Too many login attempts, please try again after an hour'
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 requests per windowMs
+  message: 'Too many API requests, please try again after 15 minutes'
+});
+
 // Use request logging middleware globally
 app.use(requestLogger);
 
@@ -28,6 +48,11 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
+
+// Apply rate limiters to routes
+app.use('/api/auth', authLimiter);
+app.use('/api', apiLimiter);
+app.use('/', generalLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
