@@ -107,21 +107,42 @@ function CreateRecipePage() {
     { value: 'Main Course', label: 'Main Course' }
   ]);
   
-  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([
+    { value: 'Breakfast', label: 'Breakfast' },
+    { value: 'Lunch', label: 'Lunch' },
+    { value: 'Dinner', label: 'Dinner' },
+    { value: 'Appetizer', label: 'Appetizer' },
+    { value: 'Main Course', label: 'Main Course' },
+    { value: 'Side Dish', label: 'Side Dish' },
+    { value: 'Dessert', label: 'Dessert' },
+    { value: 'Snack', label: 'Snack' },
+    { value: 'Beverage', label: 'Beverage' },
+    { value: 'Baked Goods', label: 'Baked Goods' },
+    { value: 'Salad', label: 'Salad' },
+    { value: 'Soup', label: 'Soup' }
+  ]);
+
+  // Form validation state
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   // Fetch categories when component mounts
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const categoriesData = await categoryService.getCategories();
+        // Transform data for select component
         const formattedCategories = categoriesData.map(cat => ({
           value: cat.name,
-          label: cat.name
+          label: cat.name,
+          description: cat.description
         }));
-        setCategoryOptions(formattedCategories);
+        if (formattedCategories && formattedCategories.length > 0) {
+          setCategoryOptions(formattedCategories);
+        }
       } catch (err) {
         console.error('Error fetching categories:', err);
-        setError('Failed to load categories. Please try again.');
+        // Keep using default categories if API fails
       }
     };
     
@@ -206,63 +227,211 @@ function CreateRecipePage() {
     }
   };
 
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'recipeTitle':
+        if (!value.trim()) {
+          return 'Recipe title is required';
+        }
+        if (value.length < 3) {
+          return 'Title must be at least 3 characters long';
+        }
+        if (value.length > 100) {
+          return 'Title must be less than 100 characters';
+        }
+        return '';
+      
+      case 'recipeDescription':
+        if (!value.trim()) {
+          return 'Description is required';
+        }
+        if (value.length < 20) {
+          return 'Description must be at least 20 characters long';
+        }
+        return '';
+      
+      case 'servings':
+        if (value < 1) {
+          return 'Servings must be at least 1';
+        }
+        if (value > 50) {
+          return 'Servings cannot exceed 50';
+        }
+        return '';
+      
+      case 'prepTime':
+        if (value < 0) {
+          return 'Prep time cannot be negative';
+        }
+        if (value > 480) {
+          return 'Prep time cannot exceed 8 hours (480 minutes)';
+        }
+        return '';
+      
+      case 'cookTime':
+        if (value < 0) {
+          return 'Cook time cannot be negative';
+        }
+        if (value > 1440) {
+          return 'Cook time cannot exceed 24 hours (1440 minutes)';
+        }
+        return '';
+      
+      case 'cuisine':
+        if (!value.trim()) {
+          return 'Please select a cuisine type';
+        }
+        return '';
+      
+      case 'category':
+        if (!value.trim()) {
+          return 'Please select a category';
+        }
+        return '';
+      
+      case 'mainImage':
+        if (!value) {
+          return 'Please upload a main image for your recipe';
+        }
+        return '';
+      
+      default:
+        return '';
+    }
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const error = validateField(field, 
+      field === 'recipeTitle' ? recipeTitle :
+      field === 'recipeDescription' ? recipeDescription :
+      field === 'servings' ? servings :
+      field === 'prepTime' ? prepTime :
+      field === 'cookTime' ? cookTime :
+      field === 'cuisine' ? cuisine :
+      field === 'category' ? category :
+      field === 'mainImage' ? mainImageUrl : ''
+    );
+    setErrors(prev => ({ ...prev, [field]: error }));
+  };
+
+  const validateIngredients = () => {
+    const ingredientErrors = ingredients.map(ingredient => {
+      const errors = {};
+      if (!ingredient.name.trim()) {
+        errors.name = 'Ingredient name is required';
+      }
+      if (ingredient.amount && isNaN(parseFloat(ingredient.amount))) {
+        errors.amount = 'Amount must be a number';
+      }
+      return errors;
+    });
+    return ingredientErrors;
+  };
+
+  const validateSteps = () => {
+    const stepErrors = steps.map(step => {
+      const errors = {};
+      const description = step.description.trim();
+      if (!description) {
+        errors.description = 'Step description is required';
+      } else if (description.length < 10) {
+        errors.description = 'Step description must be at least 10 characters';
+      }
+      return errors;
+    });
+    return stepErrors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setSuccess('');
 
-    // Form validation
-    if (!recipeTitle) {
-      setError('Please enter a recipe title');
-      setLoading(false);
-      return;
+    // Validate all fields
+    const newErrors = {};
+    const fields = [
+      'recipeTitle',
+      'recipeDescription',
+      'servings',
+      'prepTime',
+      'cookTime',
+      'cuisine',
+      'category',
+      'mainImage'
+    ];
+
+    fields.forEach(field => {
+      const error = validateField(field, 
+        field === 'recipeTitle' ? recipeTitle :
+        field === 'recipeDescription' ? recipeDescription :
+        field === 'servings' ? servings :
+        field === 'prepTime' ? prepTime :
+        field === 'cookTime' ? cookTime :
+        field === 'cuisine' ? cuisine :
+        field === 'category' ? category :
+        field === 'mainImage' ? mainImageUrl : ''
+      );
+      if (error) newErrors[field] = error;
+    });
+
+    // Validate ingredients and steps
+    const ingredientErrors = validateIngredients();
+    const stepErrors = validateSteps();
+
+    if (ingredientErrors.some(err => Object.keys(err).length > 0)) {
+      newErrors.ingredients = ingredientErrors;
     }
 
-    if (!recipeDescription) {
-      setError('Please enter a recipe description');
-      setLoading(false);
-      return;
+    if (stepErrors.some(err => Object.keys(err).length > 0)) {
+      newErrors.steps = stepErrors;
     }
 
-    if (ingredients.some(ingredient => !ingredient.name)) {
-      setError('Please fill in all ingredient names');
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       setLoading(false);
-      return;
-    }
-
-    if (steps.some(step => !step.description)) {
-      setError('Please fill in all instruction steps');
-      setLoading(false);
+      setError('Please fix the validation errors before submitting.');
       return;
     }
 
     try {
+      console.log('Preparing recipe data for submission...');
       // Prepare recipe data for submission
       const recipeData = {
         title: recipeTitle,
         description: recipeDescription,
-        ingredients: ingredients.map(({ name, amount, unit }) => ({ name, amount, unit })),
-        steps: steps.map(({ description, imageUrl }) => ({ description, image: imageUrl })),
-        prepTime,
-        cookTime,
-        servings,
+        ingredients: ingredients.map(({ name, amount, unit }) => ({ 
+          name: name.trim(),
+          amount: amount.trim(),
+          unit: unit || ''
+        })).filter(ing => ing.name || ing.amount),
+        instructions: steps.map(({ description, imageUrl }, index) => ({
+          stepNumber: index + 1,
+          description: description.trim(),
+          image: imageUrl || ''
+        })).filter(step => step.description),
+        prepTime: Number(prepTime),
+        cookTime: Number(cookTime),
+        servings: Number(servings),
         difficulty,
         cuisine,
         category,
         tags,
         mainImage: mainImageUrl,
-        notes,
+        notes: notes.trim(),
         isPublic,
         nutrition: {
-          calories,
-          protein,
-          carbs,
-          fat
+          calories: calories ? Number(calories) : null,
+          protein: protein ? Number(protein) : null,
+          carbs: carbs ? Number(carbs) : null,
+          fat: fat ? Number(fat) : null
         }
       };
-      
+
+      console.log('Submitting recipe data:', recipeData);
       const createdRecipe = await recipeService.createRecipe(recipeData);
+      console.log('Recipe created successfully:', createdRecipe);
       
       setSuccess('Recipe created successfully!');
       
@@ -325,19 +494,23 @@ function CreateRecipePage() {
 
             <TextInput
               label="Recipe Title"
-              placeholder="Enter a descriptive title"
+              placeholder="Enter a descriptive title for your recipe"
               value={recipeTitle}
               onChange={(e) => setRecipeTitle(e.target.value)}
+              onBlur={() => handleBlur('recipeTitle')}
+              error={touched.recipeTitle && errors.recipeTitle}
               required
               mb="md"
             />
 
             <Textarea
               label="Description"
-              placeholder="Describe your recipe briefly"
-              minRows={3}
+              placeholder="Describe your recipe, including any special notes or tips"
               value={recipeDescription}
               onChange={(e) => setRecipeDescription(e.target.value)}
+              onBlur={() => handleBlur('recipeDescription')}
+              error={touched.recipeDescription && errors.recipeDescription}
+              minRows={3}
               required
               mb="md"
             />
@@ -345,82 +518,103 @@ function CreateRecipePage() {
             <Group grow mb="md">
               <NumberInput
                 label="Servings"
-                placeholder="Number of servings"
+                description="Number of people this recipe serves"
                 value={servings}
-                onChange={(val) => setServings(val)}
+                onChange={setServings}
+                onBlur={() => handleBlur('servings')}
+                error={touched.servings && errors.servings}
                 min={1}
                 max={50}
+                required
               />
 
               <NumberInput
                 label="Prep Time (minutes)"
-                placeholder="Preparation time"
+                description="Time needed for preparation"
                 value={prepTime}
-                onChange={(val) => setPrepTime(val)}
+                onChange={setPrepTime}
+                onBlur={() => handleBlur('prepTime')}
+                error={touched.prepTime && errors.prepTime}
                 min={0}
-                max={300}
+                max={480}
+                required
               />
 
               <NumberInput
                 label="Cook Time (minutes)"
-                placeholder="Cooking time"
+                description="Time needed for cooking"
                 value={cookTime}
-                onChange={(val) => setCookTime(val)}
+                onChange={setCookTime}
+                onBlur={() => handleBlur('cookTime')}
+                error={touched.cookTime && errors.cookTime}
                 min={0}
-                max={300}
+                max={1440}
+                required
               />
             </Group>
 
             <Group grow mb="md">
               <Select
                 label="Difficulty"
-                placeholder="Select difficulty level"
-                data={difficultyOptions}
+                description="How challenging is this recipe?"
                 value={difficulty}
                 onChange={setDifficulty}
+                data={difficultyOptions}
+                required
               />
 
               <Select
                 label="Cuisine"
-                placeholder="Select cuisine type"
-                data={cuisineOptions}
+                description="Type of cuisine (e.g., Italian, Chinese)"
                 value={cuisine}
                 onChange={setCuisine}
+                onBlur={() => handleBlur('cuisine')}
+                error={touched.cuisine && errors.cuisine}
+                data={cuisineOptions}
                 searchable
+                required
               />
               
               <Select
                 label="Category"
-                placeholder="Select recipe category"
-                data={categoryOptions}
+                description="Recipe category (e.g., Breakfast, Dinner)"
                 value={category}
                 onChange={setCategory}
+                onBlur={() => handleBlur('category')}
+                error={touched.category && errors.category}
+                data={categoryOptions}
                 searchable
+                required
               />
             </Group>
 
             <MultiSelect
               label="Tags"
-              placeholder="Select tags for your recipe"
-              data={tagOptions}
+              description="Add relevant tags to help others find your recipe"
+              placeholder="Select or type tags"
               value={tags}
               onChange={setTags}
+              data={tagOptions}
               searchable
+              creatable
+              getCreateLabel={(query) => `+ Add ${query}`}
               mb="md"
             />
 
             <FileInput
-              label="Main Recipe Image"
-              placeholder="Upload a photo of your finished dish"
+              label="Main Image"
+              description="Upload a high-quality image of your recipe"
+              placeholder="Click to upload or drag and drop"
               accept="image/*"
               value={mainImage}
               onChange={(file) => {
                 setMainImage(file);
                 handleUploadMainImage(file);
               }}
-              icon={<IconUpload size={14} />}
-              mb="xl"
-              disabled={uploading}
+              onBlur={() => handleBlur('mainImage')}
+              error={touched.mainImage && errors.mainImage}
+              required
+              mb="md"
             />
             
             {mainImageUrl && (
@@ -443,18 +637,69 @@ function CreateRecipePage() {
               <Group key={ingredient.id} mb="md" align="flex-end">
                 <TextInput
                   label={index === 0 ? "Ingredient" : ""}
-                  placeholder="e.g. Onion, Chicken breast"
+                  placeholder="e.g. Flour, Sugar"
                   value={ingredient.name}
-                  onChange={(e) => updateIngredient(ingredient.id, 'name', e.target.value)}
-                  required
+                  onChange={(e) => {
+                    updateIngredient(ingredient.id, 'name', e.target.value);
+                    // Clear error when user starts typing
+                    if (errors.ingredients?.[index]?.name) {
+                      const newErrors = { ...errors };
+                      if (newErrors.ingredients) {
+                        newErrors.ingredients[index] = { ...newErrors.ingredients[index], name: null };
+                      }
+                      setErrors(newErrors);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (!ingredient.name.trim()) {
+                      const ingredientErrors = [...(errors.ingredients || [])];
+                      ingredientErrors[index] = { ...ingredientErrors[index], name: 'Ingredient name is required' };
+                      setErrors(prev => ({
+                        ...prev,
+                        ingredients: ingredientErrors
+                      }));
+                    }
+                  }}
+                  error={errors.ingredients?.[index]?.name}
                   style={{ flex: 2 }}
+                  required
                 />
 
                 <TextInput
                   label={index === 0 ? "Amount" : ""}
                   placeholder="e.g. 2, 1/2"
                   value={ingredient.amount}
-                  onChange={(e) => updateIngredient(ingredient.id, 'amount', e.target.value)}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    updateIngredient(ingredient.id, 'amount', newValue);
+                    // Clear error when user starts typing
+                    if (errors.ingredients?.[index]?.amount) {
+                      const newErrors = { ...errors };
+                      if (newErrors.ingredients) {
+                        newErrors.ingredients[index] = { ...newErrors.ingredients[index], amount: null };
+                      }
+                      setErrors(newErrors);
+                    }
+                  }}
+                  onBlur={() => {
+                    const value = ingredient.amount.trim();
+                    if (value && (isNaN(value) || isNaN(parseFloat(value)))) {
+                      const ingredientErrors = [...(errors.ingredients || [])];
+                      ingredientErrors[index] = { ...ingredientErrors[index], amount: 'Amount must be a number' };
+                      setErrors(prev => ({
+                        ...prev,
+                        ingredients: ingredientErrors
+                      }));
+                    } else {
+                      // Clear error if value is valid or empty
+                      const newErrors = { ...errors };
+                      if (newErrors.ingredients?.[index]?.amount) {
+                        newErrors.ingredients[index] = { ...newErrors.ingredients[index], amount: null };
+                        setErrors(newErrors);
+                      }
+                    }
+                  }}
+                  error={errors.ingredients?.[index]?.amount}
                   style={{ flex: 1 }}
                 />
 
@@ -507,24 +752,52 @@ function CreateRecipePage() {
                 </Group>
 
                 <Textarea
-                  placeholder="Describe this step"
-                  minRows={2}
+                  placeholder="Describe this step in detail"
                   value={step.description}
-                  onChange={(e) => updateStep(step.id, 'description', e.target.value)}
-                  required
+                  onChange={(e) => {
+                    updateStep(step.id, 'description', e.target.value);
+                    // Clear error when user starts typing and meets minimum length
+                    if (e.target.value.trim().length >= 10 && errors.steps?.[index]?.description) {
+                      const newErrors = { ...errors };
+                      if (newErrors.steps) {
+                        newErrors.steps[index] = { ...newErrors.steps[index], description: null };
+                      }
+                      setErrors(newErrors);
+                    }
+                  }}
+                  onBlur={() => {
+                    const description = step.description.trim();
+                    const stepErrors = [...(errors.steps || [])];
+                    if (!description) {
+                      stepErrors[index] = { ...stepErrors[index], description: 'Step description is required' };
+                    } else if (description.length < 10) {
+                      stepErrors[index] = { ...stepErrors[index], description: 'Step description must be at least 10 characters' };
+                    } else {
+                      // Clear error if valid
+                      if (stepErrors[index]) {
+                        stepErrors[index] = { ...stepErrors[index], description: null };
+                      }
+                    }
+                    setErrors(prev => ({
+                      ...prev,
+                      steps: stepErrors
+                    }));
+                  }}
+                  error={errors.steps?.[index]?.description}
+                  minRows={2}
                   mb="md"
+                  required
                 />
 
                 <FileInput
-                  placeholder="Add photo for this step (optional)"
+                  label="Step Image (optional)"
+                  placeholder="Upload an image for this step"
                   accept="image/*"
                   value={step.image}
                   onChange={(file) => {
                     updateStep(step.id, 'image', file);
                     handleUploadStepImage(file, step.id);
                   }}
-                  icon={<IconUpload size={14} />}
-                  disabled={uploading}
                 />
                 
                 {step.imageUrl && (
@@ -563,37 +836,33 @@ function CreateRecipePage() {
               mb="xl"
             />
 
-            <Title order={4} mb="md">Nutrition Information (Optional)</Title>
+            <Title order={4} mb="md">Nutrition Information (per serving)</Title>
 
-            <SimpleGrid cols={4} mb="xl">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} mb="xl">
               <TextInput
                 label="Calories"
                 placeholder="e.g. 250"
-                rightSection="kcal"
                 value={calories}
                 onChange={(e) => setCalories(e.target.value)}
               />
 
               <TextInput
                 label="Protein"
-                placeholder="e.g. 15"
-                rightSection="g"
+                placeholder="e.g. 10g"
                 value={protein}
                 onChange={(e) => setProtein(e.target.value)}
               />
 
               <TextInput
                 label="Carbohydrates"
-                placeholder="e.g. 30"
-                rightSection="g"
+                placeholder="e.g. 30g"
                 value={carbs}
                 onChange={(e) => setCarbs(e.target.value)}
               />
 
               <TextInput
                 label="Fat"
-                placeholder="e.g. 10"
-                rightSection="g"
+                placeholder="e.g. 8g"
                 value={fat}
                 onChange={(e) => setFat(e.target.value)}
               />
@@ -608,7 +877,7 @@ function CreateRecipePage() {
               <Switch
                 label="Make this recipe public"
                 checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
+                onChange={(event) => setIsPublic(event.currentTarget.checked)}
               />
             </Group>
 
