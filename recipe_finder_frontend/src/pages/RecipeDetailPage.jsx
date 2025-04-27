@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Box, Grid, Title, Text, Image, Group, Badge, Button, Tabs, List, ActionIcon, Divider, Paper, Avatar, Rating, Textarea, Loader, Alert, Center, Modal } from '@mantine/core';
-import { IconClock, IconUsers, IconChefHat, IconStar, IconHeart, IconBookmark, IconPrinter, IconShare, IconMapPin, IconArrowLeft, IconAlertCircle, IconTrash } from '@tabler/icons-react';
+import { IconClock, IconUsers, IconChefHat, IconStar, IconHeart, IconBookmark, IconPrinter, IconShare, IconMapPin, IconArrowLeft, IconAlertCircle, IconTrash, IconEdit } from '@tabler/icons-react';
 import Header from '../components/Header';
 import recipeService from '../services/recipe-service';
 import commentService from '../services/comment-service';
@@ -256,6 +256,14 @@ function RecipeDetailPage() {
               </Button>
               {isAuthenticated && recipe.createdBy && recipe.createdBy._id === currentUser.id && (
                 <Group>
+                  <Button
+                    leftIcon={<IconEdit size={14} />}
+                    color="blue"
+                    variant="outline"
+                    onClick={() => navigate(`/recipe/${id}/edit`)}
+                  >
+                    Edit Recipe
+                  </Button>
                   <Button
                     leftIcon={<IconTrash size={14} />}
                     color="red"
