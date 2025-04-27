@@ -49,15 +49,19 @@ function SearchPage() {
     const fetchCategories = async () => {
       try {
         const categoriesData = await categoryService.getCategories();
-        // Transform data for select component
-        const formattedCategories = categoriesData.map(cat => ({
-          value: cat.name,
-          label: cat.name
+        // Handle both direct array and { data: [...] } structure
+        const rawCategories = Array.isArray(categoriesData)
+          ? categoriesData
+          : categoriesData.data || [];
+        const formattedCategories = rawCategories.map(category => ({
+          value: category.name,
+          label: category.name
         }));
         setCategories(formattedCategories);
+        console.log('Fetched categories:', formattedCategories);
       } catch (err) {
         console.error('Error fetching categories:', err);
-        // Don't set error state here to avoid showing error alert for categories
+        setCategories([]);
       }
     };
     
@@ -193,7 +197,10 @@ function SearchPage() {
                   data={categories}
                   value={selectedCategory}
                   onChange={setSelectedCategory}
+                  searchable
                   clearable
+                  nothingFound="No categories found"
+                  maxDropdownHeight={280}
                 />
               </Box>
 
