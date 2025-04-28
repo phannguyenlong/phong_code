@@ -6,6 +6,8 @@ import Recipe from '../models/recipeModel.js';
 export const searchRecipes = async (req, res) => {
   try {
     const { q, withIngredients, withoutIngredients, category, cuisine, tags } = req.query;
+    const pageSize = Number(req.query.limit) || 6;
+    const page = Number(req.query.page) || 1;
     
     let query = { isPublic: true };
     
@@ -44,12 +46,19 @@ export const searchRecipes = async (req, res) => {
       };
     }
     
+    const count = await Recipe.countDocuments(query);
     const recipes = await Recipe.find(query)
       .populate('createdBy', 'username avatar')
       .sort({ rating: -1 })
-      .limit(20);
+      .limit(pageSize)
+      .skip(pageSize * (page - 1));
     
-    res.json(recipes);
+    res.json({
+      recipes,
+      page,
+      pages: Math.ceil(count / pageSize),
+      total: count
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
