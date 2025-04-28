@@ -10,7 +10,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs'
+      '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
+      '@chakra-ui/react': '@chakra-ui/react/dist/esm/index.mjs'
     }
   }
 })
