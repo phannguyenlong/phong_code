@@ -26,7 +26,19 @@ function SearchPage() {
   const [selectedCuisine, setSelectedCuisine] = useState('');
   
   const [searchResults, setSearchResults] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [categories] = useState([
+    { value: 'Breakfast', label: 'Breakfast' },
+    { value: 'Lunch', label: 'Lunch' },
+    { value: 'Dinner', label: 'Dinner' },
+    { value: 'Appetizer', label: 'Appetizer' },
+    { value: 'Soup', label: 'Soup' },
+    { value: 'Salad', label: 'Salad' },
+    { value: 'Main Course', label: 'Main Course' },
+    { value: 'Side Dish', label: 'Side Dish' },
+    { value: 'Dessert', label: 'Dessert' },
+    { value: 'Snack', label: 'Snack' },
+    { value: 'Beverage', label: 'Beverage' }
+  ]);
   const [cuisines] = useState([
     { value: 'Italian', label: 'Italian' },
     { value: 'Mexican', label: 'Mexican' },
@@ -43,27 +55,6 @@ function SearchPage() {
   const [error, setError] = useState('');
   const [favoriteRecipes, setFavoriteRecipes] = useState([]);
   const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
-
-  // Fetch categories when component mounts
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categoriesData = await categoryService.getCategories();
-        // If the response is { data: [...] }, use .data, otherwise use the array directly
-        const rawCategories = Array.isArray(categoriesData)
-          ? categoriesData
-          : (categoriesData.data || []);
-        const formattedCategories = rawCategories.map(category => ({
-          value: category.name,
-          label: category.name
-        }));
-        setCategories(formattedCategories);
-      } catch (err) {
-        setCategories([]);
-      }
-    };
-    fetchCategories();
-  }, []);
 
   // Perform search when query changes or on initial load
   useEffect(() => {
