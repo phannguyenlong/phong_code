@@ -2,6 +2,9 @@
 import authService from '../services/auth-service';
 import { API_BASE_URL } from '../config';
 
+// Create a simple event emitter for rate limit errors
+const rateLimitEvent = new Event('rateLimitExceeded');
+
 /**
  * Make authenticated API requests
  */
@@ -24,6 +27,10 @@ export const api = {
     const responseData = await response.json();
     
     if (!response.ok) {
+      if (response.status === 429) {
+        // Dispatch rate limit event
+        window.dispatchEvent(rateLimitEvent);
+      }
       throw new Error(responseData.message || 'API request failed');
     }
     

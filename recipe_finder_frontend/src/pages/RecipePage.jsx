@@ -1,6 +1,6 @@
 // src/pages/RecipePage.jsx
 import { useState, useEffect } from 'react';
-import { Box, Title, Text, SimpleGrid, Button, Group, Tabs, TextInput, Loader, Alert } from '@mantine/core';
+import { Box, Title, Text, SimpleGrid, Button, Group, Tabs, TextInput, Loader, Alert, Pagination } from '@mantine/core';
 import { IconSearch, IconPlus, IconHeart, IconBookmark, IconChefHat, IconAlertCircle } from '@tabler/icons-react';
 import RecipeCard from '../components/RecipeCard';
 import Header from '../components/Header';
@@ -21,6 +21,9 @@ function RecipePage() {
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const recipesPerPage = 3;
+  const [currentPage, setCurrentPage] = useState({ saved: 1, favorites: 1, myRecipes: 1 });
 
   useEffect(() => {
     // Load recipes based on active tab
@@ -55,6 +58,7 @@ function RecipePage() {
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
+    setCurrentPage(prev => ({ ...prev, [newTab]: 1 }));
     // Update URL to reflect tab change
     const params = new URLSearchParams(searchParams);
     params.set('tab', newTab);
@@ -64,7 +68,8 @@ function RecipePage() {
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-  
+    // Reset page to 1 on search
+    setCurrentPage(prev => ({ ...prev, [activeTab]: 1 }));
     // Validate search query
     if (query.length < 3) {
       setSearchError('Search query must be at least 3 characters.');
@@ -88,6 +93,11 @@ function RecipePage() {
 
   const isRecipeBookmarked = (recipeId) => {
     return savedRecipes.some(recipe => recipe._id === recipeId);
+  };
+
+  const paginate = (recipes, tab) => {
+    const start = (currentPage[tab] - 1) * recipesPerPage;
+    return recipes.slice(start, start + recipesPerPage);
   };
 
   return (
@@ -125,7 +135,7 @@ function RecipePage() {
               leftSection={<IconSearch size={16} />}
               mb="lg"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
             />
             
             {error && (
@@ -143,21 +153,35 @@ function RecipePage() {
               <Box ta="center" py={50}>
                 <Loader size="lg" />
               </Box>
-            ) : savedRecipes.length > 0 ? (
-              <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {filterRecipes(savedRecipes).map((recipe) => (
-                  <RecipeCard 
-                    key={recipe._id} 
-                    id={recipe._id} 
-                    image={recipe.mainImage} 
-                    title={recipe.title} 
-                    author={recipe.createdBy?.username || 'Unknown'} 
-                    rating={recipe.rating}
-                    isBookmarked={true}
-                    isFavorite={isRecipeFavorite(recipe._id)}
-                  />
-                ))}
-              </SimpleGrid>
+            ) : filterRecipes(savedRecipes).length > 0 ? (
+              <>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                  {paginate(filterRecipes(savedRecipes), 'saved').map((recipe) => (
+                    <RecipeCard 
+                      key={recipe._id} 
+                      id={recipe._id} 
+                      image={recipe.mainImage} 
+                      title={recipe.title} 
+                      author={recipe.createdBy?.username || 'Unknown'} 
+                      rating={recipe.rating}
+                      isBookmarked={true}
+                      isFavorite={isRecipeFavorite(recipe._id)}
+                    />
+                  ))}
+                </SimpleGrid>
+                {filterRecipes(savedRecipes).length > recipesPerPage && (
+                  <Box ta="center" mt="md">
+                    <Pagination
+                      total={Math.ceil(filterRecipes(savedRecipes).length / recipesPerPage)}
+                      value={currentPage.saved}
+                      onChange={page => setCurrentPage(prev => ({ ...prev, saved: page }))}
+                      color="orange"
+                      size="md"
+                      radius="md"
+                    />
+                  </Box>
+                )}
+              </>
             ) : (
               <Box ta="center" py={50}>
                 <IconBookmark size={48} color="gray" style={{ opacity: 0.5, marginBottom: 20 }} />
@@ -176,7 +200,7 @@ function RecipePage() {
               leftSection={<IconSearch size={16} />}
               mb="lg"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
             />
             
             {error && (
@@ -194,21 +218,35 @@ function RecipePage() {
               <Box ta="center" py={50}>
                 <Loader size="lg" />
               </Box>
-            ) : favoriteRecipes.length > 0 ? (
-              <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {filterRecipes(favoriteRecipes).map((recipe) => (
-                  <RecipeCard 
-                    key={recipe._id} 
-                    id={recipe._id} 
-                    image={recipe.mainImage} 
-                    title={recipe.title} 
-                    author={recipe.createdBy?.username || 'Unknown'} 
-                    rating={recipe.rating}
-                    isFavorite={true}
-                    isBookmarked={isRecipeBookmarked(recipe._id)}
-                  />
-                ))}
-              </SimpleGrid>
+            ) : filterRecipes(favoriteRecipes).length > 0 ? (
+              <>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                  {paginate(filterRecipes(favoriteRecipes), 'favorites').map((recipe) => (
+                    <RecipeCard 
+                      key={recipe._id} 
+                      id={recipe._id} 
+                      image={recipe.mainImage} 
+                      title={recipe.title} 
+                      author={recipe.createdBy?.username || 'Unknown'} 
+                      rating={recipe.rating}
+                      isFavorite={true}
+                      isBookmarked={isRecipeBookmarked(recipe._id)}
+                    />
+                  ))}
+                </SimpleGrid>
+                {filterRecipes(favoriteRecipes).length > recipesPerPage && (
+                  <Box ta="center" mt="md">
+                    <Pagination
+                      total={Math.ceil(filterRecipes(favoriteRecipes).length / recipesPerPage)}
+                      value={currentPage.favorites}
+                      onChange={page => setCurrentPage(prev => ({ ...prev, favorites: page }))}
+                      color="orange"
+                      size="md"
+                      radius="md"
+                    />
+                  </Box>
+                )}
+              </>
             ) : (
               <Box ta="center" py={50}>
                 <IconHeart size={48} color="gray" style={{ opacity: 0.5, marginBottom: 20 }} />
@@ -227,7 +265,7 @@ function RecipePage() {
               leftSection={<IconSearch size={16} />}
               mb="lg"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
             />
             
             {error && (
@@ -245,21 +283,35 @@ function RecipePage() {
               <Box ta="center" py={50}>
                 <Loader size="lg" />
               </Box>
-            ) : myRecipes.length > 0 ? (
-              <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {filterRecipes(myRecipes).map((recipe) => (
-                  <RecipeCard 
-                    key={recipe._id} 
-                    id={recipe._id} 
-                    image={recipe.mainImage} 
-                    title={recipe.title} 
-                    author="You" 
-                    rating={recipe.rating}
-                    isFavorite={isRecipeFavorite(recipe._id)}
-                    isBookmarked={isRecipeBookmarked(recipe._id)}
-                  />
-                ))}
-              </SimpleGrid>
+            ) : filterRecipes(myRecipes).length > 0 ? (
+              <>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                  {paginate(filterRecipes(myRecipes), 'myRecipes').map((recipe) => (
+                    <RecipeCard 
+                      key={recipe._id} 
+                      id={recipe._id} 
+                      image={recipe.mainImage} 
+                      title={recipe.title} 
+                      author="You" 
+                      rating={recipe.rating}
+                      isFavorite={isRecipeFavorite(recipe._id)}
+                      isBookmarked={isRecipeBookmarked(recipe._id)}
+                    />
+                  ))}
+                </SimpleGrid>
+                {filterRecipes(myRecipes).length > recipesPerPage && (
+                  <Box ta="center" mt="md">
+                    <Pagination
+                      total={Math.ceil(filterRecipes(myRecipes).length / recipesPerPage)}
+                      value={currentPage.myRecipes}
+                      onChange={page => setCurrentPage(prev => ({ ...prev, myRecipes: page }))}
+                      color="orange"
+                      size="md"
+                      radius="md"
+                    />
+                  </Box>
+                )}
+              </>
             ) : (
               <Box ta="center" py={50}>
                 <IconChefHat size={48} color="gray" style={{ opacity: 0.5, marginBottom: 20 }} />

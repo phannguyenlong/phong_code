@@ -1,0 +1,524 @@
+{
+    "info": {
+      "name": "Recipe Finder API Collection",
+      "description": "API endpoints for the Recipe Finder backend project.",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Auth",
+        "item": [
+          {
+            "name": "Register User",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:5000/api/auth/register",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "auth", "register"]
+              }
+            }
+          },
+          {
+            "name": "Login User",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:5000/api/auth/login",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "auth", "login"]
+              }
+            }
+          },
+          {
+            "name": "Forgot Password",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"john@example.com\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:5000/api/auth/forgot-password",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "auth", "forgot-password"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Users",
+        "item": [
+          {
+            "name": "Get User Profile",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/users/profile",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "profile"]
+              }
+            }
+          },
+          {
+            "name": "Update User Profile",
+            "request": {
+              "method": "PUT",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"New Name\",\n  \"email\": \"newemail@example.com\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:5000/api/users/profile",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "profile"]
+              }
+            }
+          },
+          {
+            "name": "Delete User Profile",
+            "request": {
+              "method": "DELETE",
+              "url": {
+                "raw": "http://localhost:5000/api/users/profile",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "profile"]
+              }
+            }
+          },
+          {
+            "name": "Get User Recipes",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/users/recipes",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "recipes"]
+              }
+            }
+          },
+          {
+            "name": "Get User Favorites",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/users/favorites",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "favorites"]
+              }
+            }
+          },
+          {
+            "name": "Add to Favorites",
+            "request": {
+              "method": "POST",
+              "url": {
+                "raw": "http://localhost:5000/api/users/favorites",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "favorites"]
+              }
+            }
+          },
+          {
+            "name": "Remove from Favorites",
+            "request": {
+              "method": "DELETE",
+              "url": {
+                "raw": "http://localhost:5000/api/users/favorites/:id",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "favorites", ":id"]
+              }
+            }
+          },
+          {
+            "name": "Get User Bookmarks",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/users/bookmarks",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "bookmarks"]
+              }
+            }
+          },
+          {
+            "name": "Add to Bookmarks",
+            "request": {
+              "method": "POST",
+              "url": {
+                "raw": "http://localhost:5000/api/users/bookmarks",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "bookmarks"]
+              }
+            }
+          },
+          {
+            "name": "Remove from Bookmarks",
+            "request": {
+              "method": "DELETE",
+              "url": {
+                "raw": "http://localhost:5000/api/users/bookmarks/:id",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "bookmarks", ":id"]
+              }
+            }
+          },
+          {
+            "name": "Get User Reviews",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/users/reviews",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "users", "reviews"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Recipes",
+        "item": [
+          {
+            "name": "Get All Recipes",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/recipes",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "recipes"]
+              }
+            }
+          },
+          {
+            "name": "Create Recipe",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Recipe Title\",\n  \"ingredients\": [\"ingredient1\", \"ingredient2\"],\n  \"instructions\": \"Step by step...\",\n  \"imageUrl\": \"http://example.com/image.jpg\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:5000/api/recipes",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "recipes"]
+              }
+            }
+          },
+          {
+            "name": "Get Popular Recipes",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/recipes/popular",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "recipes", "popular"]
+              }
+            }
+          },
+          {
+            "name": "Get Recent Recipes",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/recipes/recent",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "recipes", "recent"]
+              }
+            }
+          },
+          {
+            "name": "Get Recipe By ID",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/recipes/:id",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "recipes", ":id"]
+              }
+            }
+          },
+          {
+            "name": "Update Recipe",
+            "request": {
+              "method": "PUT",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Updated Title\",\n  \"ingredients\": [\"ingredient1\", \"ingredient2\"],\n  \"instructions\": \"Updated instructions...\",\n  \"imageUrl\": \"http://example.com/image.jpg\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:5000/api/recipes/:id",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "recipes", ":id"]
+              }
+            }
+          },
+          {
+            "name": "Delete Recipe",
+            "request": {
+              "method": "DELETE",
+              "url": {
+                "raw": "http://localhost:5000/api/recipes/:id",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "recipes", ":id"]
+              }
+            }
+          },
+          {
+            "name": "Get Related Recipes",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/recipes/:id/related",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "recipes", ":id", "related"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Search",
+        "item": [
+          {
+            "name": "Search Recipes",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/search",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "search"]
+              }
+            }
+          },
+          {
+            "name": "Get Popular Searches",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/search/popular",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "search", "popular"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Upload",
+        "item": [
+          {
+            "name": "Upload Image",
+            "request": {
+              "method": "POST",
+              "url": {
+                "raw": "http://localhost:5000/api/upload",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "upload"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Categories",
+        "item": [
+          {
+            "name": "Get Categories",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/categories",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "categories"]
+              }
+            }
+          },
+          {
+            "name": "Get Category Recipes",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/categories/:id/recipes",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "categories", ":id", "recipes"]
+              }
+            }
+          },
+          {
+            "name": "Create Category",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"Category Name\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:5000/api/categories",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "categories"]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Comments",
+        "item": [
+          {
+            "name": "Get Recipe Comments",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "http://localhost:5000/api/comments/recipe/:id",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "comments", "recipe", ":id"]
+              }
+            }
+          },
+          {
+            "name": "Create Comment",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"recipeId\": \"123\",\n  \"text\": \"Great recipe!\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:5000/api/comments",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "comments"]
+              }
+            }
+          },
+          {
+            "name": "Update Comment",
+            "request": {
+              "method": "PUT",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"text\": \"Updated comment text\"\n}"
+              },
+              "url": {
+                "raw": "http://localhost:5000/api/comments/:id",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "comments", ":id"]
+              }
+            }
+          },
+          {
+            "name": "Delete Comment",
+            "request": {
+              "method": "DELETE",
+              "url": {
+                "raw": "http://localhost:5000/api/comments/:id",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "5000",
+                "path": ["api", "comments", ":id"]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+  

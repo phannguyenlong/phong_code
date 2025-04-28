@@ -4,6 +4,7 @@ import { Divider } from '@mantine/core';
 import { Routes, Route } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
+import { RateLimitProvider } from './context/RateLimitContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import SideBar from './components/SideBar';
@@ -23,55 +24,57 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
-      <div className="app-container">
-        <SideBar />
-        <div className="content">
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/recipe/:id" element={<RecipeDetailPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            
-            {/* Protected routes */}
-            <Route 
-              path="/account" 
-              element={
-                <ProtectedRoute>
-                  <AccountPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/recipes" 
-              element={
-                <ProtectedRoute>
-                  <RecipePage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/create-recipe" 
-              element={
-                <ProtectedRoute>
-                  <CreateRecipePage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/recipe/:id/edit" 
-              element={
-                <ProtectedRoute>
-                  <EditRecipePage />
-                </ProtectedRoute>
-              } 
-            />
-          </Routes>
-          <Divider my="xs" labelPosition="center" />
-          <Footer />
+      <RateLimitProvider>
+        <div className="app-container">
+          <SideBar />
+          <div className="content">
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/recipe/:id" element={<RecipeDetailPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              
+              {/* Protected routes */}
+              <Route 
+                path="/account" 
+                element={
+                  <ProtectedRoute>
+                    <AccountPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/recipes" 
+                element={
+                  <ProtectedRoute>
+                    <RecipePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/create-recipe" 
+                element={
+                  <ProtectedRoute>
+                    <CreateRecipePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/recipe/:id/edit" 
+                element={
+                  <ProtectedRoute>
+                    <EditRecipePage />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+            <Divider my="xs" labelPosition="center" />
+            <Footer />
+          </div>
         </div>
-      </div>
+      </RateLimitProvider>
     </AuthProvider>
   );
 }

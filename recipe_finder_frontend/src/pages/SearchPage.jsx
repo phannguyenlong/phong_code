@@ -1,7 +1,7 @@
 // src/pages/SearchPage.jsx
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Box, Title, Text, Tabs, Group, TextInput, Button, SimpleGrid, Paper, Center, Divider, Alert, Loader, Select } from '@mantine/core';
+import { Box, Title, Text, Tabs, Group, TextInput, Button, SimpleGrid, Paper, Center, Divider, Alert, Loader, Select, Pagination } from '@mantine/core';
 import { IconSearch, IconStar, IconUser, IconClock, IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import Header from '../components/Header';
 import searchService from '../services/search-service';
@@ -56,13 +56,16 @@ function SearchPage() {
   const [error, setError] = useState('');
   const [favoriteRecipes, setFavoriteRecipes] = useState([]);
   const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const resultsPerPage = 3;
 
   // Perform search when query changes or on initial load
   useEffect(() => {
     if (queryParam) {
       performSearch();
     }
-  }, [queryParam]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [queryParam, currentPage]); // add currentPage
 
   const performSearch = async () => {
     setLoading(true);
@@ -75,11 +78,14 @@ function SearchPage() {
         withIngredients: withIngredients || undefined,
         withoutIngredients: withoutIngredients || undefined,
         category: selectedCategory || undefined,
-        cuisine: selectedCuisine || undefined
+        cuisine: selectedCuisine || undefined,
+        page: currentPage,
+        limit: resultsPerPage
       };
       
       const results = await searchService.searchRecipes(searchParams);
-      setSearchResults(results);
+      setSearchResults(results.recipes || []);
+      setTotalPages(results.pages || 1);
 
       // If user is authenticated, fetch their favorites and bookmarks
       if (isAuthenticated) {
@@ -245,20 +251,35 @@ function SearchPage() {
               <Loader size="lg" />
             </Center>
           ) : searchResults.length > 0 ? (
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 2, lg: 3 }} spacing="lg">
-              {searchResults.map((recipe) => (
-                <RecipeCard 
-                  key={recipe._id} 
-                  id={recipe._id} 
-                  image={recipe.mainImage} 
-                  title={recipe.title} 
-                  author={recipe.createdBy?.username || 'Unknown'} 
-                  rating={recipe.rating}
-                  isFavorite={isRecipeFavorite(recipe._id)}
-                  isBookmarked={isRecipeBookmarked(recipe._id)}
-                />
-              ))}
-            </SimpleGrid>
+            <>
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 2, lg: 3 }} spacing="lg">
+                {searchResults.map((recipe) => (
+                  <RecipeCard 
+                    key={recipe._id} 
+                    id={recipe._id} 
+                    image={recipe.mainImage} 
+                    title={recipe.title} 
+                    author={recipe.createdBy?.username || 'Unknown'} 
+                    rating={recipe.rating}
+                    isFavorite={isRecipeFavorite(recipe._id)}
+                    isBookmarked={isRecipeBookmarked(recipe._id)}
+                  />
+                ))}
+              </SimpleGrid>
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <Center mt="xl">
+                  <Pagination
+                    total={totalPages}
+                    value={currentPage}
+                    onChange={setCurrentPage}
+                    color="orange"
+                    size="md"
+                    radius="md"
+                  />
+                </Center>
+              )}
+            </>
           ) : queryParam ? (
             <Box py={50} style={{ textAlign: 'center' }}>
               <Center mb={20}>
