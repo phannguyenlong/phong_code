@@ -23,7 +23,12 @@ const app = express();
 const generalLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again after 15 minutes'
+  handler: function (req, res) {
+    res.status(429).send({
+      status: 500,
+      message: 'Too many requests!',
+    });
+  }
 });
 
 // Use request logging middleware globally
