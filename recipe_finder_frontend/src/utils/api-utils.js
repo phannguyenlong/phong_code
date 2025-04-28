@@ -1,6 +1,6 @@
 // src/utils/api-utils.js
-import authService from '../services/auth-service';
 import { API_BASE_URL } from '../config';
+import authService from '../services/auth-service';
 
 // Create a simple event emitter for rate limit errors
 const rateLimitEvent = new Event('rateLimitExceeded');
@@ -25,7 +25,7 @@ export const api = {
     });
 
     const responseData = await response.json();
-    
+
     if (!response.ok) {
       if (response.status === 429) {
         // Dispatch rate limit event
@@ -33,7 +33,7 @@ export const api = {
       }
       throw new Error(responseData.message || 'API request failed');
     }
-    
+
     return responseData;
   },
 
@@ -55,11 +55,11 @@ export const api = {
     });
 
     const responseData = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(responseData.message || 'API request failed');
     }
-    
+
     return responseData;
   },
 
@@ -81,11 +81,11 @@ export const api = {
     });
 
     const responseData = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(responseData.message || 'API request failed');
     }
-    
+
     return responseData;
   },
 
@@ -108,11 +108,11 @@ export const api = {
     });
 
     const responseData = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(responseData.message || 'API request failed');
     }
-    
+
     return responseData;
   },
 };
