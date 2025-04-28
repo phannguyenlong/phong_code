@@ -16,6 +16,7 @@ import RecipeDetailPage from './pages/RecipeDetailPage';
 import RegisterPage from './pages/RegisterPage';
 import SearchPage from './pages/SearchPage';
 import CreateRecipePage from './pages/CreateRecipePage';
+import EditRecipePage from './pages/EditRecipePage';
 
 import './App.css';
 
@@ -55,6 +56,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CreateRecipePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/recipe/:id/edit" 
+              element={
+                <ProtectedRoute>
+                  <EditRecipePage />
                 </ProtectedRoute>
               } 
             />

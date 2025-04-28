@@ -80,7 +80,14 @@ export const getUserRecipes = async (req, res) => {
 // @access  Private
 export const getUserFavorites = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('favorites');
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'favorites',
+        populate: {
+          path: 'createdBy',
+          select: 'username avatar'
+        }
+      });
     
     res.json(user.favorites);
   } catch (error) {
@@ -132,7 +139,14 @@ export const removeFromFavorites = async (req, res) => {
 // @access  Private
 export const getUserBookmarks = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('bookmarks');
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'bookmarks',
+        populate: {
+          path: 'createdBy',
+          select: 'username avatar'
+        }
+      });
     
     res.json(user.bookmarks);
   } catch (error) {
@@ -190,6 +204,46 @@ export const getUserReviews = async (req, res) => {
     
     res.json(reviews);
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete user profile
+// @route   DELETE /api/users/profile
+// @access  Private
+export const deleteUserProfile = async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({ message: 'Password is required' });
+    }
+
+    const user = await User.findById(req.user._id);
+    
+    if (user) {
+      // Verify password
+      const isMatch = await user.matchPassword(password);
+      
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid password' });
+      }
+
+      // Delete user's recipes
+      await Recipe.deleteMany({ createdBy: req.user._id });
+      
+      // Delete user's comments
+      await Comment.deleteMany({ user: req.user._id });
+      
+      // Delete the user
+      await User.findByIdAndDelete(req.user._id);
+      
+      res.json({ message: 'User account deleted successfully' });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Delete user error:', error);
     res.status(500).json({ message: error.message });
   }
 };

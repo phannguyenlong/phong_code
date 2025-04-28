@@ -21,13 +21,13 @@ export const api = {
       },
     });
 
-    const data = await response.json();
+    const responseData = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      throw new Error(responseData.message || 'API request failed');
     }
     
-    return data;
+    return responseData;
   },
 
   /**
@@ -47,13 +47,13 @@ export const api = {
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
+    const responseData = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      throw new Error(responseData.message || 'API request failed');
     }
     
-    return data;
+    return responseData;
   },
 
   /**
@@ -73,21 +73,23 @@ export const api = {
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
+    const responseData = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      throw new Error(responseData.message || 'API request failed');
     }
     
-    return data;
+    return responseData;
   },
 
   /**
    * DELETE request with auth token
    * @param {string} endpoint - API endpoint (without base URL)
+   * @param {object} options - Request options
+   * @param {object} options.data - Request body data
    * @returns {Promise} - Response data
    */
-  async delete(endpoint) {
+  async delete(endpoint, { data } = {}) {
     const token = authService.getToken();
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
@@ -95,14 +97,15 @@ export const api = {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : '',
       },
+      ...(data && { body: JSON.stringify(data) }),
     });
 
-    const data = await response.json();
+    const responseData = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      throw new Error(responseData.message || 'API request failed');
     }
     
-    return data;
+    return responseData;
   },
 };

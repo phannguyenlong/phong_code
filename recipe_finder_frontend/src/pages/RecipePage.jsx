@@ -29,13 +29,16 @@ function RecipePage() {
       setError('');
       
       try {
-        if (activeTab === 'saved') {
-          const data = await userService.getUserBookmarks();
-          setSavedRecipes(data);
-        } else if (activeTab === 'favorites') {
-          const data = await userService.getUserFavorites();
-          setFavoriteRecipes(data);
-        } else if (activeTab === 'my-recipes') {
+        // Always fetch favorites and bookmarks for proper state management
+        const [favoritesData, bookmarksData] = await Promise.all([
+          userService.getUserFavorites(),
+          userService.getUserBookmarks()
+        ]);
+        setFavoriteRecipes(favoritesData);
+        setSavedRecipes(bookmarksData);
+
+        // If on my-recipes tab, fetch user's recipes
+        if (activeTab === 'my-recipes') {
           const data = await userService.getUserRecipes();
           setMyRecipes(data);
         }
@@ -79,6 +82,14 @@ function RecipePage() {
     );
   };
 
+  const isRecipeFavorite = (recipeId) => {
+    return favoriteRecipes.some(recipe => recipe._id === recipeId);
+  };
+
+  const isRecipeBookmarked = (recipeId) => {
+    return savedRecipes.some(recipe => recipe._id === recipeId);
+  };
+
   return (
     <Box>
       <Header />
@@ -107,15 +118,6 @@ function RecipePage() {
               My Recipes
             </Tabs.Tab>
           </Tabs.List>
-        
-          <TextInput
-            placeholder="Search saved recipes"
-            leftSection={<IconSearch size={16} />}
-            mb="lg"
-            value={searchQuery}
-            onChange={handleSearchChange} // Use the handleSearchChange function here
-            />
-          {searchError && <Text color="red" size="sm">{searchError}</Text>} // Display error message
 
           <Tabs.Panel value="saved" pt="md">
             <TextInput
@@ -150,7 +152,9 @@ function RecipePage() {
                     image={recipe.mainImage} 
                     title={recipe.title} 
                     author={recipe.createdBy?.username || 'Unknown'} 
-                    rating={recipe.rating} 
+                    rating={recipe.rating}
+                    isBookmarked={true}
+                    isFavorite={isRecipeFavorite(recipe._id)}
                   />
                 ))}
               </SimpleGrid>
@@ -199,7 +203,9 @@ function RecipePage() {
                     image={recipe.mainImage} 
                     title={recipe.title} 
                     author={recipe.createdBy?.username || 'Unknown'} 
-                    rating={recipe.rating} 
+                    rating={recipe.rating}
+                    isFavorite={true}
+                    isBookmarked={isRecipeBookmarked(recipe._id)}
                   />
                 ))}
               </SimpleGrid>
@@ -248,7 +254,9 @@ function RecipePage() {
                     image={recipe.mainImage} 
                     title={recipe.title} 
                     author="You" 
-                    rating={recipe.rating} 
+                    rating={recipe.rating}
+                    isFavorite={isRecipeFavorite(recipe._id)}
+                    isBookmarked={isRecipeBookmarked(recipe._id)}
                   />
                 ))}
               </SimpleGrid>

@@ -1,11 +1,14 @@
 // src/pages/SearchPage.jsx
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Box, Title, Text, Tabs, Group, TextInput, Button, SimpleGrid, Paper, Center, Divider, Alert, Loader, Select } from '@mantine/core';
 import { IconSearch, IconStar, IconUser, IconClock, IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import Header from '../components/Header';
 import searchService from '../services/search-service';
 import categoryService from '../services/category-service';
+import userService from '../services/user-service';
+import { useAuth } from '../context/AuthContext';
+import RecipeCard from '../components/RecipeCard';
 
 function SearchPage() {
   const location = useLocation();
@@ -13,6 +16,7 @@ function SearchPage() {
   const searchParams = new URLSearchParams(location.search);
   const queryParam = searchParams.get('q') || '';
 
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState(queryParam);
   const [searchError, setSearchError] = useState('');
   const [activeTab, setActiveTab] = useState('latest');
@@ -23,7 +27,19 @@ function SearchPage() {
   const [selectedCuisine, setSelectedCuisine] = useState('');
   
   const [searchResults, setSearchResults] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [categories] = useState([
+    { value: 'Breakfast', label: 'Breakfast' },
+    { value: 'Lunch', label: 'Lunch' },
+    { value: 'Dinner', label: 'Dinner' },
+    { value: 'Appetizer', label: 'Appetizer' },
+    { value: 'Soup', label: 'Soup' },
+    { value: 'Salad', label: 'Salad' },
+    { value: 'Main Course', label: 'Main Course' },
+    { value: 'Side Dish', label: 'Side Dish' },
+    { value: 'Dessert', label: 'Dessert' },
+    { value: 'Snack', label: 'Snack' },
+    { value: 'Beverage', label: 'Beverage' }
+  ]);
   const [cuisines] = useState([
     { value: 'Italian', label: 'Italian' },
     { value: 'Mexican', label: 'Mexican' },
@@ -38,27 +54,8 @@ function SearchPage() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-
-  // Fetch categories when component mounts
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categoriesData = await categoryService.getCategories();
-        // Transform data for select component
-        const formattedCategories = categoriesData.map(cat => ({
-          value: cat.name,
-          label: cat.name
-        }));
-        setCategories(formattedCategories);
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-        // Don't set error state here to avoid showing error alert for categories
-      }
-    };
-    
-    fetchCategories();
-  }, []);
+  const [favoriteRecipes, setFavoriteRecipes] = useState([]);
+  const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
 
   // Perform search when query changes or on initial load
   useEffect(() => {
@@ -83,6 +80,16 @@ function SearchPage() {
       
       const results = await searchService.searchRecipes(searchParams);
       setSearchResults(results);
+
+      // If user is authenticated, fetch their favorites and bookmarks
+      if (isAuthenticated) {
+        const [favoritesData, bookmarksData] = await Promise.all([
+          userService.getUserFavorites(),
+          userService.getUserBookmarks()
+        ]);
+        setFavoriteRecipes(favoritesData);
+        setBookmarkedRecipes(bookmarksData);
+      }
     } catch (err) {
       console.error('Search error:', err);
       setError('Search failed. Please try again.');
@@ -113,6 +120,14 @@ function SearchPage() {
     setWithoutIngredients('');
     setSelectedCategory('');
     setSelectedCuisine('');
+  };
+
+  const isRecipeFavorite = (recipeId) => {
+    return favoriteRecipes.some(recipe => recipe._id === recipeId);
+  };
+
+  const isRecipeBookmarked = (recipeId) => {
+    return bookmarkedRecipes.some(recipe => recipe._id === recipeId);
   };
 
   return (
@@ -171,7 +186,10 @@ function SearchPage() {
                   data={categories}
                   value={selectedCategory}
                   onChange={setSelectedCategory}
+                  searchable
                   clearable
+                  nothingFound="No categories found"
+                  maxDropdownHeight={280}
                 />
               </Box>
 
@@ -229,35 +247,16 @@ function SearchPage() {
           ) : searchResults.length > 0 ? (
             <SimpleGrid cols={{ base: 1, sm: 2, md: 2, lg: 3 }} spacing="lg">
               {searchResults.map((recipe) => (
-                <Paper key={recipe._id} shadow="sm" p="md" radius="md" withBorder>
-                  <Link to={`/recipe/${recipe._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <Box 
-                      style={{ 
-                        backgroundImage: `url(${recipe.mainImage})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        height: 200,
-                        borderRadius: 8,
-                        marginBottom: 16
-                      }}
-                    />
-                    <Title order={4} mb="xs">{recipe.title}</Title>
-                    <Group spacing="xs" mb="xs">
-                      <IconUser size={16} />
-                      <Text size="sm">{recipe.createdBy?.username || 'Unknown'}</Text>
-                    </Group>
-                    <Group spacing="xs" mb="xs">
-                      <IconStar size={16} color="#FFD700" />
-                      <Text size="sm">{recipe.rating || 'No ratings'}</Text>
-                    </Group>
-                    <Group spacing="xs">
-                      <IconClock size={16} />
-                      <Text size="sm">{recipe.prepTime + recipe.cookTime} mins</Text>
-                      <Text size="sm">•</Text>
-                      <Text size="sm">{recipe.difficulty}</Text>
-                    </Group>
-                  </Link>
-                </Paper>
+                <RecipeCard 
+                  key={recipe._id} 
+                  id={recipe._id} 
+                  image={recipe.mainImage} 
+                  title={recipe.title} 
+                  author={recipe.createdBy?.username || 'Unknown'} 
+                  rating={recipe.rating}
+                  isFavorite={isRecipeFavorite(recipe._id)}
+                  isBookmarked={isRecipeBookmarked(recipe._id)}
+                />
               ))}
             </SimpleGrid>
           ) : queryParam ? (

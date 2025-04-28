@@ -4,6 +4,8 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
+// import mongoSanitize from 'express-mongo-sanitize';
+// import moment from 'moment';
 
 import requestLogger from './src/middleware/loggerMiddleware.js';
 import authRoutes from './src/routes/authRoutes.js';
@@ -32,10 +34,37 @@ app.use(helmet());         // Secure headers
 // app.use(mongoSanitize());  // Prevent NoSQL injection
 
 // Middleware
-app.use(cors());
+
+//  // Enable CORS for specific origins 
+// const allowedOrigins = ['http://localhost:5000', 'http://localhost:5173', 'https://n12122882.ifn666.com:5173', 'https://n12122882.ifn666.com:5000'];
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // Allow non-browser clients like curl, Postman
+
+    const allowedOrigins = [
+      'http://localhost:5000', // example if your frontend is on port 3000
+      'http://localhost:5173', // or whatever port you want to allow
+      'https://n12122882.ifn666.com:5173', // if deployed
+      'https://n12122882.ifn666.com:5000'
+    ];
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // if you need cookies/session
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use('/uploads', express.static('uploads'));
+// fix cors issue
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res, path) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
 
 // Apply rate limiters to routes
 app.use('/', generalLimiter);

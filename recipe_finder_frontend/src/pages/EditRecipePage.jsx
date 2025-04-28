@@ -1,6 +1,5 @@
-// src/pages/CreateRecipePage.jsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Title, TextInput, Textarea, NumberInput, Select, MultiSelect, Button, Group, Paper, Divider, FileInput, Text, ActionIcon, SimpleGrid, Switch, Alert, Loader } from '@mantine/core';
 import { IconArrowLeft, IconUpload, IconTrash, IconPlus, IconAlertCircle, IconCheck } from '@tabler/icons-react';
 import Header from '../components/Header';
@@ -9,8 +8,9 @@ import categoryService from '../services/category-service';
 import uploadService from '../services/upload-service';
 import imageUtils from '../utils/image-utils';
 
-function CreateRecipePage() {
+function EditRecipePage() {
   const navigate = useNavigate();
+  const { id } = useParams();
 
   // Recipe details state
   const [recipeTitle, setRecipeTitle] = useState('');
@@ -48,6 +48,7 @@ function CreateRecipePage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [initialLoading, setInitialLoading] = useState(true);
   
   // Form options
   const [difficultyOptions] = useState([
@@ -126,10 +127,11 @@ function CreateRecipePage() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
-  // Fetch categories when component mounts
+  // Fetch categories and recipe data when component mounts
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch categories
         const categoriesData = await categoryService.getCategories();
         // Transform data for select component
         const formattedCategories = categoriesData.map(cat => ({
@@ -140,14 +142,64 @@ function CreateRecipePage() {
         if (formattedCategories && formattedCategories.length > 0) {
           setCategoryOptions(formattedCategories);
         }
+
+        // Fetch recipe data
+        const recipeData = await recipeService.getRecipeById(id);
+        
+        // Populate form with recipe data
+        setRecipeTitle(recipeData.title || '');
+        setRecipeDescription(recipeData.description || '');
+        setServings(recipeData.servings || 4);
+        setPrepTime(recipeData.prepTime || 15);
+        setCookTime(recipeData.cookTime || 30);
+        setDifficulty(recipeData.difficulty || 'Medium');
+        setCuisine(recipeData.cuisine || '');
+        setCategory(recipeData.category || '');
+        setTags(recipeData.tags || []);
+        setMainImageUrl(recipeData.mainImage || '');
+        setNotes(recipeData.notes || '');
+        setIsPublic(recipeData.isPublic !== false);
+        
+        // Set nutrition data
+        if (recipeData.nutrition) {
+          setCalories(recipeData.nutrition.calories || '');
+          setProtein(recipeData.nutrition.protein || '');
+          setCarbs(recipeData.nutrition.carbs || '');
+          setFat(recipeData.nutrition.fat || '');
+        }
+        
+        // Set ingredients
+        if (recipeData.ingredients && recipeData.ingredients.length > 0) {
+          const formattedIngredients = recipeData.ingredients.map((ing, index) => ({
+            id: index + 1,
+            name: ing.name || '',
+            amount: ing.amount || '',
+            unit: ing.unit || ''
+          }));
+          setIngredients(formattedIngredients);
+        }
+        
+        // Set steps/instructions
+        if (recipeData.steps && recipeData.steps.length > 0) {
+          const formattedSteps = recipeData.steps.map((step, index) => ({
+            id: index + 1,
+            description: step.description || '',
+            imageUrl: step.image || '',
+            image: null
+          }));
+          setSteps(formattedSteps);
+        }
+        
       } catch (err) {
-        console.error('Error fetching categories:', err);
-        // Keep using default categories if API fails
+        console.error('Error fetching data:', err);
+        setError('Failed to load recipe data. Please try again.');
+      } finally {
+        setInitialLoading(false);
       }
     };
     
-    fetchCategories();
-  }, []);
+    fetchData();
+  }, [id]);
 
   // Handler functions
   const handleGoBack = () => {
@@ -396,7 +448,7 @@ function CreateRecipePage() {
     }
 
     try {
-      console.log('Preparing recipe data for submission...');
+      console.log('Preparing recipe data for update...');
       // Prepare recipe data for submission
       const recipeData = {
         title: recipeTitle,
@@ -428,23 +480,34 @@ function CreateRecipePage() {
         }
       };
 
-      console.log('Submitting recipe data:', recipeData);
-      const createdRecipe = await recipeService.createRecipe(recipeData);
-      console.log('Recipe created successfully:', createdRecipe);
+      console.log('Updating recipe data:', recipeData);
+      const updatedRecipe = await recipeService.updateRecipe(id, recipeData);
+      console.log('Recipe updated successfully:', updatedRecipe);
       
-      setSuccess('Recipe created successfully!');
+      setSuccess('Recipe updated successfully!');
       
       // Navigate to the recipe detail page after submission
       setTimeout(() => {
-        navigate(`/recipe/${createdRecipe._id}`);
+        navigate(`/recipe/${id}`);
       }, 1500);
     } catch (err) {
-      console.error('Error creating recipe:', err);
-      setError(err.message || 'Failed to create recipe. Please try again.');
+      console.error('Error updating recipe:', err);
+      setError(err.message || 'Failed to update recipe. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <Box>
+        <Header />
+        <Box p="xl" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <Loader size="xl" />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -485,7 +548,7 @@ function CreateRecipePage() {
         )}
         
         <Paper shadow="md" p="xl" withBorder>
-          <Title order={1} mb="lg">Create New Recipe</Title>
+          <Title order={1} mb="lg">Edit Recipe</Title>
 
           <form onSubmit={handleSubmit}>
             {/* Basic Recipe Information */}
@@ -882,7 +945,7 @@ function CreateRecipePage() {
 
             {/* Submit Buttons */}
             <Group position="right" mt="xl">
-              <Button variant="outline" onClick={() => navigate('/')}>
+              <Button variant="outline" onClick={() => navigate(`/recipe/${id}`)}>
                 Cancel
               </Button>
               <Button 
@@ -890,7 +953,7 @@ function CreateRecipePage() {
                 color="orange"
                 loading={loading || uploading}
               >
-                Publish Recipe
+                Update Recipe
               </Button>
             </Group>
           </form>
@@ -900,4 +963,4 @@ function CreateRecipePage() {
   );
 }
 
-export default CreateRecipePage;
+export default EditRecipePage; 

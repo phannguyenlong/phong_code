@@ -1,20 +1,31 @@
 // src/pages/HomePage.jsx
 import { useState, useEffect } from 'react';
-import { Box, Center, Image, Stack, Group, TextInput, Button, Alert, Loader, SimpleGrid, Text, Title } from '@mantine/core';
+import { Box, Center, Image, Stack, Group, TextInput, Button, Alert, Loader, SimpleGrid, Text, Title, Pagination } from '@mantine/core';
 import { IconSearch, IconAlertCircle } from '@tabler/icons-react';
 import Header from '../components/Header';
 import RecipeCard from '../components/RecipeCard';
 import { useNavigate } from 'react-router-dom';
 import recipeService from '../services/recipe-service';
 import searchService from '../services/search-service';
+import userService from '../services/user-service';
+import { useAuth } from '../context/AuthContext';
 
 function HomePage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   
   const [popularSearches, setPopularSearches] = useState([]);
   const [popularRecipes, setPopularRecipes] = useState([]);
   const [recentRecipes, setRecentRecipes] = useState([]);
+  const [favoriteRecipes, setFavoriteRecipes] = useState([]);
+  const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecipes, setTotalRecipes] = useState(0);
+  const recipesPerPage = 4;
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,13 +40,27 @@ function HomePage() {
         // Fetch data in parallel
         const [searchesData, popularData, recentData] = await Promise.all([
           searchService.getPopularSearches(),
-          recipeService.getPopularRecipes(),
+          recipeService.getPopularRecipes({ page: currentPage, limit: recipesPerPage }),
           recipeService.getRecentRecipes()
         ]);
         
         setPopularSearches(searchesData);
-        setPopularRecipes(popularData);
+        // Handle both array and object response for popularData
+        const recipes = Array.isArray(popularData) ? popularData : popularData.recipes || [];
+        setPopularRecipes(recipes);
+        setTotalPages(popularData.pages || 1);
+        setTotalRecipes(popularData.total || recipes.length);
         setRecentRecipes(recentData);
+
+        // If user is authenticated, fetch their favorites and bookmarks
+        if (isAuthenticated) {
+          const [favoritesData, bookmarksData] = await Promise.all([
+            userService.getUserFavorites(),
+            userService.getUserBookmarks()
+          ]);
+          setFavoriteRecipes(favoritesData);
+          setBookmarkedRecipes(bookmarksData);
+        }
       } catch (err) {
         console.error('Error fetching homepage data:', err);
         setError('Failed to load content. Please try again.');
@@ -45,7 +70,7 @@ function HomePage() {
     };
     
     fetchData();
-  }, []);
+  }, [isAuthenticated, currentPage]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -54,127 +79,131 @@ function HomePage() {
     }
   };
 
+  const isRecipeFavorite = (recipeId) => {
+    return favoriteRecipes.some(recipe => recipe._id === recipeId);
+  };
+
+  const isRecipeBookmarked = (recipeId) => {
+    return bookmarkedRecipes.some(recipe => recipe._id === recipeId);
+  };
+
   return (
     <Box>
       <Header />
-      <Center mb={20}>
-        <Stack align="center" spacing={0}>
-          <Image
-            src="/logo.png"
-            alt="Recipe Finder"
-            height={120}
-            width={200}
-            fit="contain"
-          />
+      <Box p="xl">
+        {/* Hero section with search */}
+        <Stack align="center" spacing="xl" py={50}>
+          <Title order={1} ta="center">Find & Share Amazing Recipes</Title>
+          <Text size="lg" c="dimmed" maw={600} ta="center">
+            Discover delicious recipes from around the world or share your own culinary creations
+          </Text>
+          
+          <form onSubmit={handleSearch} style={{ width: '100%', maxWidth: 600 }}>
+            <TextInput
+              size="lg"
+              placeholder="Search recipes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              leftSection={<IconSearch size={20} />}
+            />
+          </form>
         </Stack>
-      </Center>
 
-      <Group className="search-container">
-        <TextInput
-          placeholder="Search by recipe or ingredients"
-          leftSection={<IconSearch size={16} />}
-          style={{ flex: 1 }}
-          radius="md"
-          size="md"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <Button onClick={handleSearch} color="orange" radius="md" size="md">
-          Search
-        </Button>
-      </Group>
+        {error && (
+          <Alert icon={<IconAlertCircle size={16} />} title="Error" color="red" mb="xl">
+            {error}
+          </Alert>
+        )}
+        
+        {loading ? (
+          <Center py={50}>
+            <Loader size="lg" />
+          </Center>
+        ) : (
+          <>
+            {/* Popular Searches Section */}
+            <Box mt={20}>
+              <Group justify="space-between" mb={10}>
+                <Text fw={600} size="lg">Today's popular searches</Text>
+              </Group>
+              <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="md">
+                {popularSearches.map((item) => (
+                  <Box 
+                    key={item.id} 
+                    onClick={() => navigate(`/search?q=${encodeURIComponent(item.title)}`)}
+                    sx={{
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      '&:hover': { transform: 'translateY(-5px)' }
+                    }}
+                  >
+                    <RecipeCard 
+                      id={item.id} 
+                      image={item.imageUrl} 
+                      title={item.title} 
+                      author="" 
+                      rating={0} 
+                      hideFooter 
+                    />
+                  </Box>
+                ))}
+              </SimpleGrid>
+            </Box>
 
-      <Box>
-        <Image
-          src="https://img-global.cpcdn.com/contest_banners/2e21d62bd73464b9/966x183cq70/banner.webp"
-          alt="Featured Banner"
-          className="banner"
-          radius="md"
-        />
-      </Box>
-
-      {error && (
-        <Alert 
-          icon={<IconAlertCircle size={16} />} 
-          title="Error" 
-          color="red" 
-          mb="xl"
-          mt="xl"
-        >
-          {error}
-        </Alert>
-      )}
-
-      {loading ? (
-        <Center py={50}>
-          <Loader size="lg" />
-        </Center>
-      ) : (
-        <>
-          {/* Popular Searches Section */}
-          <Box mt={20}>
-            <Group justify="space-between" mb={10}>
-              <Text fw={600} size="lg">Today's popular searches</Text>
-            </Group>
-            <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="md">
-              {popularSearches.map((item) => (
-                <Box 
-                  key={item.id} 
-                  onClick={() => navigate(`/search?q=${encodeURIComponent(item.title)}`)}
-                  sx={{
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                    '&:hover': { transform: 'translateY(-5px)' }
-                  }}
-                >
+            {/* Popular Recipes Section */}
+            <Box mt={30}>
+              <Title order={4} mb={15}>Popular Recipes</Title>
+              <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="md">
+                {popularRecipes.map((recipe) => (
                   <RecipeCard 
-                    id={item.id} 
-                    image={item.imageUrl} 
-                    title={item.title} 
-                    author="" 
-                    rating={0} 
-                    hideFooter 
+                    key={recipe._id} 
+                    id={recipe._id} 
+                    image={recipe.mainImage} 
+                    title={recipe.title} 
+                    author={recipe.createdBy?.username || 'Unknown'} 
+                    rating={recipe.rating}
+                    isFavorite={isRecipeFavorite(recipe._id)}
+                    isBookmarked={isRecipeBookmarked(recipe._id)}
                   />
-                </Box>
-              ))}
-            </SimpleGrid>
-          </Box>
+                ))}
+              </SimpleGrid>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <Center mt="xl">
+                  <Pagination
+                    total={totalPages}
+                    value={currentPage}
+                    onChange={setCurrentPage}
+                    color="orange"
+                    size="md"
+                    radius="md"
+                  />
+                </Center>
+              )}
+            </Box>
 
-          {/* Popular Recipes Section */}
-          <Box mt={30}>
-            <Title order={4} mb={15}>Popular Recipes</Title>
-            <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="md">
-              {popularRecipes.map((recipe) => (
-                <RecipeCard 
-                  key={recipe._id} 
-                  id={recipe._id} 
-                  image={recipe.mainImage} 
-                  title={recipe.title} 
-                  author={recipe.createdBy?.username || 'Unknown'} 
-                  rating={recipe.rating} 
-                />
-              ))}
-            </SimpleGrid>
-          </Box>
-
-          {/* Recent Recipes Section */}
-          <Box mt={30}>
-            <Title order={4} mb={15}>Recently Added</Title>
-            <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="md">
-              {recentRecipes.map((recipe) => (
-                <RecipeCard 
-                  key={recipe._id} 
-                  id={recipe._id} 
-                  image={recipe.mainImage} 
-                  title={recipe.title} 
-                  author={recipe.createdBy?.username || 'Unknown'} 
-                  rating={recipe.rating} 
-                />
-              ))}
-            </SimpleGrid>
-          </Box>
-        </>
-      )}
+            {/* Recent Recipes Section */}
+            <Box mt={30}>
+              <Title order={4} mb={15}>Recently Added</Title>
+              <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="md">
+                {recentRecipes.map((recipe) => (
+                  <RecipeCard 
+                    key={recipe._id} 
+                    id={recipe._id} 
+                    image={recipe.mainImage} 
+                    title={recipe.title} 
+                    author={recipe.createdBy?.username || 'Unknown'} 
+                    rating={recipe.rating}
+                    isFavorite={isRecipeFavorite(recipe._id)}
+                    isBookmarked={isRecipeBookmarked(recipe._id)}
+                  />
+                ))}
+              </SimpleGrid>
+            </Box>
+          </>
+        )}
+      </Box>
     </Box>
   );
 }
