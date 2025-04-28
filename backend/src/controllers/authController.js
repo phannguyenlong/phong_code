@@ -11,7 +11,7 @@ export const registerUser = async (req, res) => {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(409).json({ message: 'User already exists' });
     }
 
     const user = await User.create({
@@ -43,7 +43,7 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    
+
     if (user && (await user.matchPassword(password))) {
       console.log(user.matchPassword(password))
       res.json({
