@@ -13,6 +13,7 @@ function RecipePage() {
   
   const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchError, setSearchError] = useState('');
   
   const [savedRecipes, setSavedRecipes] = useState([]);
   const [favoriteRecipes, setFavoriteRecipes] = useState([]);
@@ -60,9 +61,21 @@ function RecipePage() {
     window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
   };
 
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+  
+    // Validate search query
+    if (query.length < 3) {
+      setSearchError('Search query must be at least 3 characters.');
+    } else {
+      setSearchError('');
+    }
+  };
+  
   // Filter recipes based on search query
   const filterRecipes = (recipes) => {
-    if (!searchQuery) return recipes;
+    if (!searchQuery || searchQuery.length < 3) return recipes; // Don't filter if invalid query
     
     return recipes.filter(recipe => 
       recipe.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -105,7 +118,16 @@ function RecipePage() {
               My Recipes
             </Tabs.Tab>
           </Tabs.List>
-          
+        
+          <TextInput
+            placeholder="Search saved recipes"
+            leftSection={<IconSearch size={16} />}
+            mb="lg"
+            value={searchQuery}
+            onChange={handleSearchChange} // Use the handleSearchChange function here
+            />
+          {searchError && <Text color="red" size="sm">{searchError}</Text>} // Display error message
+
           <Tabs.Panel value="saved" pt="md">
             <TextInput
               placeholder="Search saved recipes"

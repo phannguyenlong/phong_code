@@ -18,6 +18,7 @@ function SearchPage() {
 
   const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState(queryParam);
+  const [searchError, setSearchError] = useState('');
   const [activeTab, setActiveTab] = useState('latest');
   
   const [withIngredients, setWithIngredients] = useState('');
@@ -143,7 +144,7 @@ function SearchPage() {
                 style={{ width: '50%' }}
                 size="md"
                 leftSection={<IconSearch size={20} />}
-              />
+              />         
               <Button type="submit" color="orange" size="md">
                 Search
               </Button>
