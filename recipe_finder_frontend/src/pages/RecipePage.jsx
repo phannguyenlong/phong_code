@@ -118,15 +118,6 @@ function RecipePage() {
               My Recipes
             </Tabs.Tab>
           </Tabs.List>
-        
-          <TextInput
-            placeholder="Search saved recipes"
-            leftSection={<IconSearch size={16} />}
-            mb="lg"
-            value={searchQuery}
-            onChange={handleSearchChange} // Use the handleSearchChange function here
-            />
-          {searchError && <Text color="red" size="sm">{searchError}</Text>} // Display error message
 
           <Tabs.Panel value="saved" pt="md">
             <TextInput
