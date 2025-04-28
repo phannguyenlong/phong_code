@@ -89,23 +89,6 @@ class UserService {
   async getUserReviews() {
     return api.get('/api/users/reviews');
   }
-
-  /**
-   * Delete user account
-   * @param {string} password - User's password for verification
-   * @returns {Promise} - Promise with deletion result
-   */
-  async deleteAccount(password) {
-    try {
-      const response = await api.delete('/api/users/profile', { 
-        data: { password } 
-      });
-      return response;
-    } catch (error) {
-      console.error('Delete account error:', error);
-      throw error;
-    }
-  }
 }
 
 export default new UserService();

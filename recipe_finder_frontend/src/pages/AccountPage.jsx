@@ -1,7 +1,7 @@
 // src/pages/AccountPage.jsx
 import { useState, useEffect } from 'react';
-import { Box, Title, Text, Card, Avatar, Grid, Button, TextInput, PasswordInput, Switch, Divider, Group, List, Alert, Loader, Center, Modal } from '@mantine/core';
-import { IconUser, IconAt, IconSettings, IconBell, IconReceipt, IconLogout, IconAlertCircle, IconCheck, IconTrash } from '@tabler/icons-react';
+import { Box, Title, Text, Card, Avatar, Grid, Button, TextInput, PasswordInput, Switch, Divider, Group, List, Alert, Loader, Center } from '@mantine/core';
+import { IconUser, IconAt, IconSettings, IconBell, IconReceipt, IconLogout, IconAlertCircle, IconCheck } from '@tabler/icons-react';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import userService from '../services/user-service';
@@ -36,11 +36,6 @@ function AccountPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deletePassword, setDeletePassword] = useState('');
-  const [deleteError, setDeleteError] = useState('');
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     // Load user profile data
@@ -139,31 +134,6 @@ function AccountPage() {
     navigate('/');
   };
 
-  const handleDeleteAccount = async () => {
-    if (!deletePassword) {
-      setDeleteError('Please enter your password to confirm account deletion');
-      return;
-    }
-
-    setDeleteLoading(true);
-    setDeleteError('');
-
-    try {
-      const result = await userService.deleteAccount(deletePassword);
-      if (result && result.message === 'User account deleted successfully') {
-        logout();
-        navigate('/');
-      } else {
-        setDeleteError('Failed to delete account. Please try again.');
-      }
-    } catch (err) {
-      console.error('Error deleting account:', err);
-      setDeleteError(err.message || 'Failed to delete account. Please check your password and try again.');
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <Box>
@@ -210,7 +180,7 @@ function AccountPage() {
               
               <Divider my="md" />
               
-              <Group position="center" spacing="xs">
+              <Group position="center">
                 <Button 
                   variant="subtle" 
                   leftSection={<IconLogout size={16} />} 
@@ -218,14 +188,6 @@ function AccountPage() {
                   onClick={handleLogout}
                 >
                   Sign Out
-                </Button>
-                <Button
-                  variant="subtle"
-                  leftSection={<IconTrash size={16} />}
-                  color="red"
-                  onClick={() => setDeleteModalOpen(true)}
-                >
-                  Delete Account
                 </Button>
               </Group>
             </Card>
@@ -400,46 +362,6 @@ function AccountPage() {
           </Grid.Col>
         </Grid>
       </Box>
-
-      {/* Delete Account Modal */}
-      <Modal
-        opened={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        title="Delete Account"
-        centered
-      >
-        <Text size="sm" mb="md">
-          Are you sure you want to delete your account? This action cannot be undone.
-        </Text>
-        
-        <PasswordInput
-          label="Enter your password to confirm"
-          placeholder="Your password"
-          value={deletePassword}
-          onChange={(e) => setDeletePassword(e.target.value)}
-          mb="md"
-          required
-        />
-        
-        {deleteError && (
-          <Alert color="red" mb="md">
-            {deleteError}
-          </Alert>
-        )}
-        
-        <Group position="right" mt="md">
-          <Button variant="subtle" onClick={() => setDeleteModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button 
-            color="red" 
-            onClick={handleDeleteAccount}
-            loading={deleteLoading}
-          >
-            Delete Account
-          </Button>
-        </Group>
-      </Modal>
     </Box>
   );
 }

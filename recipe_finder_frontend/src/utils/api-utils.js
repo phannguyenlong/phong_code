@@ -21,13 +21,13 @@ export const api = {
       },
     });
 
-    const responseData = await response.json();
+    const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(responseData.message || 'API request failed');
+      throw new Error(data.message || 'API request failed');
     }
     
-    return responseData;
+    return data;
   },
 
   /**
@@ -47,13 +47,13 @@ export const api = {
       body: JSON.stringify(body),
     });
 
-    const responseData = await response.json();
+    const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(responseData.message || 'API request failed');
+      throw new Error(data.message || 'API request failed');
     }
     
-    return responseData;
+    return data;
   },
 
   /**
@@ -73,23 +73,21 @@ export const api = {
       body: JSON.stringify(body),
     });
 
-    const responseData = await response.json();
+    const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(responseData.message || 'API request failed');
+      throw new Error(data.message || 'API request failed');
     }
     
-    return responseData;
+    return data;
   },
 
   /**
    * DELETE request with auth token
    * @param {string} endpoint - API endpoint (without base URL)
-   * @param {object} options - Request options
-   * @param {object} options.data - Request body data
    * @returns {Promise} - Response data
    */
-  async delete(endpoint, { data } = {}) {
+  async delete(endpoint) {
     const token = authService.getToken();
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
@@ -97,15 +95,14 @@ export const api = {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : '',
       },
-      ...(data && { body: JSON.stringify(data) }),
     });
 
-    const responseData = await response.json();
+    const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(responseData.message || 'API request failed');
+      throw new Error(data.message || 'API request failed');
     }
     
-    return responseData;
+    return data;
   },
 };

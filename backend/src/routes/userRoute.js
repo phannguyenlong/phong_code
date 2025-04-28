@@ -2,7 +2,6 @@ import express from 'express';
 import {
   getUserProfile,
   updateUserProfile,
-  deleteUserProfile,
   getUserRecipes,
   getUserFavorites,
   addToFavorites,
@@ -18,7 +17,6 @@ const router = express.Router();
 
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
-router.delete('/profile', protect, deleteUserProfile);
 router.get('/recipes', protect, getUserRecipes);
 
 router.get('/favorites', protect, getUserFavorites);
