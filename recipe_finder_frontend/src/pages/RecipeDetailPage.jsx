@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Box, Grid, Title, Text, Image, Group, Badge, Button, Tabs, List, ActionIcon, Divider, Paper, Avatar, Rating, Textarea, Loader, Alert, Center, Modal } from '@mantine/core';
-import { IconClock, IconUsers, IconChefHat, IconStar, IconHeart, IconBookmark, IconPrinter, IconShare, IconMapPin, IconArrowLeft, IconAlertCircle, IconTrash, IconEdit } from '@tabler/icons-react';
+import { IconClock, IconUsers, IconChefHat, IconStar, IconHeart, IconBookmark, IconPrinter, IconShare, IconMapPin, IconArrowLeft, IconAlertCircle, IconTrash, IconEdit, IconPencil } from '@tabler/icons-react';
 import Header from '../components/Header';
 import recipeService from '../services/recipe-service';
 import commentService from '../services/comment-service';
@@ -32,6 +32,15 @@ function RecipeDetailPage() {
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteCommentModalOpen, setDeleteCommentModalOpen] = useState(false);
+  const [commentToEdit, setCommentToEdit] = useState(null);
+  const [commentToDelete, setCommentToDelete] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const [editRating, setEditRating] = useState(0);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
   useEffect(() => {
     // Fetch recipe data when component mounts or ID changes
@@ -162,6 +171,57 @@ function RecipeDetailPage() {
     } finally {
       setIsDeleting(false);
       setDeleteModalOpen(false);
+    }
+  };
+
+  const openEditModal = (comment) => {
+    setCommentToEdit(comment);
+    setEditContent(comment.content);
+    setEditRating(comment.rating);
+    setEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setCommentToEdit(null);
+    setEditContent('');
+    setEditRating(0);
+  };
+
+  const handleEditComment = async () => {
+    if (!editContent.trim() || editRating === 0) return;
+    setEditSubmitting(true);
+    try {
+      const updated = await commentService.updateComment(commentToEdit._id, { content: editContent, rating: editRating });
+      setComments(comments.map(c => c._id === updated._id ? { ...c, ...updated } : c));
+      closeEditModal();
+    } catch (err) {
+      console.error('Error updating comment:', err);
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const openDeleteCommentModal = (comment) => {
+    setCommentToDelete(comment);
+    setDeleteCommentModalOpen(true);
+  };
+
+  const closeDeleteCommentModal = () => {
+    setDeleteCommentModalOpen(false);
+    setCommentToDelete(null);
+  };
+
+  const handleDeleteComment = async () => {
+    setDeleteSubmitting(true);
+    try {
+      await commentService.deleteComment(commentToDelete._id);
+      setComments(comments.filter(c => c._id !== commentToDelete._id));
+      closeDeleteCommentModal();
+    } catch (err) {
+      console.error('Error deleting comment:', err);
+    } finally {
+      setDeleteSubmitting(false);
     }
   };
 
@@ -506,7 +566,19 @@ function RecipeDetailPage() {
                                 </Text>
                               </div>
                             </Group>
-                            <Rating value={comment.rating} readOnly size="sm" />
+                            <Group>
+                              <Rating value={comment.rating} readOnly size="sm" />
+                              {isAuthenticated && comment.user && comment.user._id === currentUser.id && (
+                                <>
+                                  <ActionIcon color="blue" variant="light" onClick={() => openEditModal(comment)}>
+                                    <IconPencil size={18} />
+                                  </ActionIcon>
+                                  <ActionIcon color="red" variant="light" onClick={() => openDeleteCommentModal(comment)}>
+                                    <IconTrash size={18} />
+                                  </ActionIcon>
+                                </>
+                              )}
+                            </Group>
                           </Group>
                           <Text>{comment.content}</Text>
                         </Paper>
@@ -602,6 +674,43 @@ function RecipeDetailPage() {
             onClick={handleDeleteRecipe}
             loading={isDeleting}
           >
+            Delete
+          </Button>
+        </Group>
+      </Modal>
+
+      <Modal
+        opened={editModalOpen}
+        onClose={closeEditModal}
+        title="Edit Review"
+        centered
+      >
+        <Rating mb="md" value={editRating} onChange={setEditRating} />
+        <Textarea
+          placeholder="Update your review..."
+          minRows={3}
+          mb="md"
+          value={editContent}
+          onChange={e => setEditContent(e.target.value)}
+        />
+        <Group position="right">
+          <Button variant="subtle" onClick={closeEditModal}>Cancel</Button>
+          <Button color="blue" onClick={handleEditComment} loading={editSubmitting} disabled={!editContent.trim() || editRating === 0}>
+            Save Changes
+          </Button>
+        </Group>
+      </Modal>
+
+      <Modal
+        opened={deleteCommentModalOpen}
+        onClose={closeDeleteCommentModal}
+        title="Delete Review"
+        centered
+      >
+        <Text mb="lg">Are you sure you want to delete this review? This action cannot be undone.</Text>
+        <Group position="right">
+          <Button variant="subtle" onClick={closeDeleteCommentModal}>Cancel</Button>
+          <Button color="red" onClick={handleDeleteComment} loading={deleteSubmitting}>
             Delete
           </Button>
         </Group>
