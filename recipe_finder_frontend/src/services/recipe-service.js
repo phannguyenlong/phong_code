@@ -69,10 +69,19 @@ class RecipeService {
 
   /**
    * Get popular recipes
-   * @returns {Promise} - Promise with popular recipes
+   * @param {Object} params - Query parameters
+   * @param {number} params.page - Page number
+   * @param {number} params.limit - Items per page
+   * @returns {Promise} - Promise with popular recipes and pagination info
    */
-  async getPopularRecipes() {
-    return api.get('/api/recipes/popular');
+  async getPopularRecipes(params = {}) {
+    const queryString = Object.keys(params)
+      .filter(key => params[key] !== undefined && params[key] !== null && params[key] !== '')
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+      .join('&');
+    
+    const endpoint = `/api/recipes/popular${queryString ? '?' + queryString : ''}`;
+    return api.get(endpoint);
   }
 
   /**

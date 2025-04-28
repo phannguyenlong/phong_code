@@ -1,6 +1,6 @@
 // src/pages/HomePage.jsx
 import { useState, useEffect } from 'react';
-import { Box, Center, Image, Stack, Group, TextInput, Button, Alert, Loader, SimpleGrid, Text, Title } from '@mantine/core';
+import { Box, Center, Image, Stack, Group, TextInput, Button, Alert, Loader, SimpleGrid, Text, Title, Pagination } from '@mantine/core';
 import { IconSearch, IconAlertCircle } from '@tabler/icons-react';
 import Header from '../components/Header';
 import RecipeCard from '../components/RecipeCard';
@@ -21,6 +21,12 @@ function HomePage() {
   const [favoriteRecipes, setFavoriteRecipes] = useState([]);
   const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecipes, setTotalRecipes] = useState(0);
+  const recipesPerPage = 4;
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -34,12 +40,16 @@ function HomePage() {
         // Fetch data in parallel
         const [searchesData, popularData, recentData] = await Promise.all([
           searchService.getPopularSearches(),
-          recipeService.getPopularRecipes(),
+          recipeService.getPopularRecipes({ page: currentPage, limit: recipesPerPage }),
           recipeService.getRecentRecipes()
         ]);
         
         setPopularSearches(searchesData);
-        setPopularRecipes(popularData);
+        // Handle both array and object response for popularData
+        const recipes = Array.isArray(popularData) ? popularData : popularData.recipes || [];
+        setPopularRecipes(recipes);
+        setTotalPages(popularData.pages || 1);
+        setTotalRecipes(popularData.total || recipes.length);
         setRecentRecipes(recentData);
 
         // If user is authenticated, fetch their favorites and bookmarks
@@ -60,7 +70,7 @@ function HomePage() {
     };
     
     fetchData();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentPage]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -157,6 +167,20 @@ function HomePage() {
                   />
                 ))}
               </SimpleGrid>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <Center mt="xl">
+                  <Pagination
+                    total={totalPages}
+                    value={currentPage}
+                    onChange={setCurrentPage}
+                    color="orange"
+                    size="md"
+                    radius="md"
+                  />
+                </Center>
+              )}
             </Box>
 
             {/* Recent Recipes Section */}

@@ -278,12 +278,25 @@ export const getRelatedRecipes = async (req, res) => {
 // @access  Public
 export const getPopularRecipes = async (req, res) => {
   try {
-    const recipes = await Recipe.find({ isPublic: true })
+    const pageSize = Number(req.query.limit) || 8;
+    const page = Number(req.query.page) || 1;
+
+    // Only public recipes, sorted by rating and reviewCount
+    const filter = { isPublic: true };
+    const count = await Recipe.countDocuments(filter);
+
+    const recipes = await Recipe.find(filter)
       .sort({ rating: -1, reviewCount: -1 })
       .populate('createdBy', 'username avatar')
-      .limit(4);
-    
-    res.json(recipes);
+      .limit(pageSize)
+      .skip(pageSize * (page - 1));
+
+    res.json({
+      recipes,
+      page,
+      pages: Math.ceil(count / pageSize),
+      total: count
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
