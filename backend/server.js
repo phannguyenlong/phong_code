@@ -22,7 +22,7 @@ const app = express();
 // Rate limiters
 const generalLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 1, // Limit each IP to 100 requests per windowMs
   handler: function (req, res) {
     res.status(429).send({
       status: 500,
