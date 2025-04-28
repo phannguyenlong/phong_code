@@ -24,18 +24,6 @@ const generalLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 
-const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // Limit each IP to 5 login attempts per hour
-  message: 'Too many login attempts, please try again after an hour'
-});
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // Limit each IP to 50 requests per windowMs
-  message: 'Too many API requests, please try again after 15 minutes'
-});
-
 // Use request logging middleware globally
 app.use(requestLogger);
 
@@ -50,8 +38,6 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
 
 // Apply rate limiters to routes
-app.use('/api/auth', authLimiter);
-app.use('/api', apiLimiter);
 app.use('/', generalLimiter);
 
 // Routes
