@@ -27,7 +27,7 @@ const imageUtils = {
   /**
    * Fallback image URL if the main one fails
    */
-  fallbackImage: 'https://via.placeholder.com/400x400?text=No+Image'
+  fallbackImage: 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
 };
 
 export default imageUtils;

@@ -17,7 +17,7 @@ function Header() {
       <Group>
         <Link to="/">
           <Image 
-            src="/logo.png"
+            src="/assignment2/logo.png"
             alt="Recipe Finder"
             height={60}
           />

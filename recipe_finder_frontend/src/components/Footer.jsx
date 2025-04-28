@@ -11,7 +11,7 @@ function Footer() {
           <Grid.Col span={{ base: 12, md: 3 }}>
             <Box mb="md">
               <Image
-                src="/logo.png"
+                src="/assignment2/logo.png"
                 alt="Recipe Finder"
                 width={50}
               />
