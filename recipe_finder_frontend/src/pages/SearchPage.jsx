@@ -1,7 +1,7 @@
 // src/pages/SearchPage.jsx
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Box, Title, Text, Tabs, Group, TextInput, Button, SimpleGrid, Paper, Center, Divider, Alert, Loader, Select } from '@mantine/core';
+import { Box, Title, Text, Tabs, Group, TextInput, Button, SimpleGrid, Paper, Center, Divider, Alert, Loader, Select, Pagination } from '@mantine/core';
 import { IconSearch, IconStar, IconUser, IconClock, IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import Header from '../components/Header';
 import searchService from '../services/search-service';
@@ -55,30 +55,33 @@ function SearchPage() {
   const [error, setError] = useState('');
   const [favoriteRecipes, setFavoriteRecipes] = useState([]);
   const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
 
   // Perform search when query changes or on initial load
   useEffect(() => {
     if (queryParam) {
       performSearch();
     }
-  }, [queryParam]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [queryParam, currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const performSearch = async () => {
     setLoading(true);
     setError('');
     
     try {
-      // Prepare search parameters
-      const searchParams = {
-        q: searchQuery,
-        withIngredients: withIngredients || undefined,
-        withoutIngredients: withoutIngredients || undefined,
-        category: selectedCategory || undefined,
-        cuisine: selectedCuisine || undefined
+      const params = {
+        keyword: searchQuery,
+        category: selectedCategory,
+        cuisine: selectedCuisine,
+        page: currentPage
       };
       
-      const results = await searchService.searchRecipes(searchParams);
-      setSearchResults(results);
+      const response = await searchService.getRecipes(params);
+      setSearchResults(response.recipes);
+      setTotalPages(response.pages);
+      setTotalResults(response.total);
 
       // If user is authenticated, fetch their favorites and bookmarks
       if (isAuthenticated) {
@@ -90,8 +93,8 @@ function SearchPage() {
         setBookmarkedRecipes(bookmarksData);
       }
     } catch (err) {
-      console.error('Search error:', err);
-      setError('Search failed. Please try again.');
+      console.error('Error performing search:', err);
+      setError('Failed to perform search. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -127,6 +130,10 @@ function SearchPage() {
 
   const isRecipeBookmarked = (recipeId) => {
     return bookmarkedRecipes.some(recipe => recipe._id === recipeId);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -244,20 +251,36 @@ function SearchPage() {
               <Loader size="lg" />
             </Center>
           ) : searchResults.length > 0 ? (
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 2, lg: 3 }} spacing="lg">
-              {searchResults.map((recipe) => (
-                <RecipeCard 
-                  key={recipe._id} 
-                  id={recipe._id} 
-                  image={recipe.mainImage} 
-                  title={recipe.title} 
-                  author={recipe.createdBy?.username || 'Unknown'} 
-                  rating={recipe.rating}
-                  isFavorite={isRecipeFavorite(recipe._id)}
-                  isBookmarked={isRecipeBookmarked(recipe._id)}
+            <>
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 2, lg: 3 }} spacing="lg">
+                {searchResults.map((recipe) => (
+                  <RecipeCard 
+                    key={recipe._id} 
+                    id={recipe._id} 
+                    image={recipe.mainImage} 
+                    title={recipe.title} 
+                    author={recipe.createdBy?.username || 'Unknown'} 
+                    rating={recipe.rating}
+                    isFavorite={isRecipeFavorite(recipe._id)}
+                    isBookmarked={isRecipeBookmarked(recipe._id)}
+                  />
+                ))}
+              </SimpleGrid>
+              
+              <Group position="center" mt="xl">
+                <Pagination 
+                  value={currentPage} 
+                  onChange={handlePageChange} 
+                  total={totalPages} 
+                  withEdges 
+                  size="md"
                 />
-              ))}
-            </SimpleGrid>
+              </Group>
+              
+              <Text ta="center" c="dimmed" mt="md">
+                Showing {searchResults.length} of {totalResults} recipes
+              </Text>
+            </>
           ) : queryParam ? (
             <Box py={50} style={{ textAlign: 'center' }}>
               <Center mb={20}>

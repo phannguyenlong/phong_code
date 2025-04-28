@@ -1,6 +1,6 @@
 // src/pages/RecipePage.jsx
 import { useState, useEffect } from 'react';
-import { Box, Title, Text, SimpleGrid, Button, Group, Tabs, TextInput, Loader, Alert } from '@mantine/core';
+import { Box, Title, Text, SimpleGrid, Button, Group, Tabs, TextInput, Loader, Alert, Pagination } from '@mantine/core';
 import { IconSearch, IconPlus, IconHeart, IconBookmark, IconChefHat, IconAlertCircle } from '@tabler/icons-react';
 import RecipeCard from '../components/RecipeCard';
 import Header from '../components/Header';
@@ -21,6 +21,18 @@ function RecipePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [savedCurrentPage, setSavedCurrentPage] = useState(1);
+  const [savedTotalPages, setSavedTotalPages] = useState(1);
+  const [savedTotalResults, setSavedTotalResults] = useState(0);
+  
+  const [favoriteCurrentPage, setFavoriteCurrentPage] = useState(1);
+  const [favoriteTotalPages, setFavoriteTotalPages] = useState(1);
+  const [favoriteTotalResults, setFavoriteTotalResults] = useState(0);
+  
+  const [myRecipesCurrentPage, setMyRecipesCurrentPage] = useState(1);
+  const [myRecipesTotalPages, setMyRecipesTotalPages] = useState(1);
+  const [myRecipesTotalResults, setMyRecipesTotalResults] = useState(0);
+
   useEffect(() => {
     // Load recipes based on active tab
     const loadRecipes = async () => {
@@ -30,16 +42,23 @@ function RecipePage() {
       try {
         // Always fetch favorites and bookmarks for proper state management
         const [favoritesData, bookmarksData] = await Promise.all([
-          userService.getUserFavorites(),
-          userService.getUserBookmarks()
+          userService.getUserFavorites({ page: favoriteCurrentPage }),
+          userService.getUserBookmarks({ page: savedCurrentPage })
         ]);
-        setFavoriteRecipes(favoritesData);
-        setSavedRecipes(bookmarksData);
+        setFavoriteRecipes(favoritesData.recipes);
+        setFavoriteTotalPages(favoritesData.pages);
+        setFavoriteTotalResults(favoritesData.total);
+        
+        setSavedRecipes(bookmarksData.recipes);
+        setSavedTotalPages(bookmarksData.pages);
+        setSavedTotalResults(bookmarksData.total);
 
         // If on my-recipes tab, fetch user's recipes
         if (activeTab === 'my-recipes') {
-          const data = await userService.getUserRecipes();
-          setMyRecipes(data);
+          const data = await userService.getUserRecipes({ page: myRecipesCurrentPage });
+          setMyRecipes(data.recipes);
+          setMyRecipesTotalPages(data.pages);
+          setMyRecipesTotalResults(data.total);
         }
       } catch (err) {
         console.error('Error loading recipes:', err);
@@ -50,7 +69,7 @@ function RecipePage() {
     };
     
     loadRecipes();
-  }, [activeTab]);
+  }, [activeTab, savedCurrentPage, favoriteCurrentPage, myRecipesCurrentPage]);
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
@@ -75,6 +94,18 @@ function RecipePage() {
 
   const isRecipeBookmarked = (recipeId) => {
     return savedRecipes.some(recipe => recipe._id === recipeId);
+  };
+
+  const handleSavedPageChange = (page) => {
+    setSavedCurrentPage(page);
+  };
+
+  const handleFavoritePageChange = (page) => {
+    setFavoriteCurrentPage(page);
+  };
+
+  const handleMyRecipesPageChange = (page) => {
+    setMyRecipesCurrentPage(page);
   };
 
   return (
@@ -131,20 +162,36 @@ function RecipePage() {
                 <Loader size="lg" />
               </Box>
             ) : savedRecipes.length > 0 ? (
-              <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {filterRecipes(savedRecipes).map((recipe) => (
-                  <RecipeCard 
-                    key={recipe._id} 
-                    id={recipe._id} 
-                    image={recipe.mainImage} 
-                    title={recipe.title} 
-                    author={recipe.createdBy?.username || 'Unknown'} 
-                    rating={recipe.rating}
-                    isBookmarked={true}
-                    isFavorite={isRecipeFavorite(recipe._id)}
+              <>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                  {filterRecipes(savedRecipes).map((recipe) => (
+                    <RecipeCard 
+                      key={recipe._id} 
+                      id={recipe._id} 
+                      image={recipe.mainImage} 
+                      title={recipe.title} 
+                      author={recipe.createdBy?.username || 'Unknown'} 
+                      rating={recipe.rating}
+                      isFavorite={isRecipeFavorite(recipe._id)}
+                      isBookmarked={true}
+                    />
+                  ))}
+                </SimpleGrid>
+                
+                <Group position="center" mt="xl">
+                  <Pagination 
+                    value={savedCurrentPage} 
+                    onChange={handleSavedPageChange} 
+                    total={savedTotalPages} 
+                    withEdges 
+                    size="md"
                   />
-                ))}
-              </SimpleGrid>
+                </Group>
+                
+                <Text ta="center" c="dimmed" mt="md">
+                  Showing {savedRecipes.length} of {savedTotalResults} saved recipes
+                </Text>
+              </>
             ) : (
               <Box ta="center" py={50}>
                 <IconBookmark size={48} color="gray" style={{ opacity: 0.5, marginBottom: 20 }} />
@@ -182,20 +229,36 @@ function RecipePage() {
                 <Loader size="lg" />
               </Box>
             ) : favoriteRecipes.length > 0 ? (
-              <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {filterRecipes(favoriteRecipes).map((recipe) => (
-                  <RecipeCard 
-                    key={recipe._id} 
-                    id={recipe._id} 
-                    image={recipe.mainImage} 
-                    title={recipe.title} 
-                    author={recipe.createdBy?.username || 'Unknown'} 
-                    rating={recipe.rating}
-                    isFavorite={true}
-                    isBookmarked={isRecipeBookmarked(recipe._id)}
+              <>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                  {filterRecipes(favoriteRecipes).map((recipe) => (
+                    <RecipeCard 
+                      key={recipe._id} 
+                      id={recipe._id} 
+                      image={recipe.mainImage} 
+                      title={recipe.title} 
+                      author={recipe.createdBy?.username || 'Unknown'} 
+                      rating={recipe.rating}
+                      isFavorite={true}
+                      isBookmarked={isRecipeBookmarked(recipe._id)}
+                    />
+                  ))}
+                </SimpleGrid>
+                
+                <Group position="center" mt="xl">
+                  <Pagination 
+                    value={favoriteCurrentPage} 
+                    onChange={handleFavoritePageChange} 
+                    total={favoriteTotalPages} 
+                    withEdges 
+                    size="md"
                   />
-                ))}
-              </SimpleGrid>
+                </Group>
+                
+                <Text ta="center" c="dimmed" mt="md">
+                  Showing {favoriteRecipes.length} of {favoriteTotalResults} favorite recipes
+                </Text>
+              </>
             ) : (
               <Box ta="center" py={50}>
                 <IconHeart size={48} color="gray" style={{ opacity: 0.5, marginBottom: 20 }} />
@@ -233,20 +296,36 @@ function RecipePage() {
                 <Loader size="lg" />
               </Box>
             ) : myRecipes.length > 0 ? (
-              <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {filterRecipes(myRecipes).map((recipe) => (
-                  <RecipeCard 
-                    key={recipe._id} 
-                    id={recipe._id} 
-                    image={recipe.mainImage} 
-                    title={recipe.title} 
-                    author="You" 
-                    rating={recipe.rating}
-                    isFavorite={isRecipeFavorite(recipe._id)}
-                    isBookmarked={isRecipeBookmarked(recipe._id)}
+              <>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                  {filterRecipes(myRecipes).map((recipe) => (
+                    <RecipeCard 
+                      key={recipe._id} 
+                      id={recipe._id} 
+                      image={recipe.mainImage} 
+                      title={recipe.title} 
+                      author="You" 
+                      rating={recipe.rating}
+                      isFavorite={isRecipeFavorite(recipe._id)}
+                      isBookmarked={isRecipeBookmarked(recipe._id)}
+                    />
+                  ))}
+                </SimpleGrid>
+                
+                <Group position="center" mt="xl">
+                  <Pagination 
+                    value={myRecipesCurrentPage} 
+                    onChange={handleMyRecipesPageChange} 
+                    total={myRecipesTotalPages} 
+                    withEdges 
+                    size="md"
                   />
-                ))}
-              </SimpleGrid>
+                </Group>
+                
+                <Text ta="center" c="dimmed" mt="md">
+                  Showing {myRecipes.length} of {myRecipesTotalResults} of your recipes
+                </Text>
+              </>
             ) : (
               <Box ta="center" py={50}>
                 <IconChefHat size={48} color="gray" style={{ opacity: 0.5, marginBottom: 20 }} />

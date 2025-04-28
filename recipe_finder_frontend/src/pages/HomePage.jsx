@@ -1,6 +1,6 @@
 // src/pages/HomePage.jsx
 import { useState, useEffect } from 'react';
-import { Box, Center, Image, Stack, Group, TextInput, Button, Alert, Loader, SimpleGrid, Text, Title } from '@mantine/core';
+import { Box, Center, Image, Stack, Group, TextInput, Button, Alert, Loader, SimpleGrid, Text, Title, Pagination } from '@mantine/core';
 import { IconSearch, IconAlertCircle } from '@tabler/icons-react';
 import Header from '../components/Header';
 import RecipeCard from '../components/RecipeCard';
@@ -24,6 +24,14 @@ function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [popularCurrentPage, setPopularCurrentPage] = useState(1);
+  const [popularTotalPages, setPopularTotalPages] = useState(1);
+  const [popularTotalResults, setPopularTotalResults] = useState(0);
+  
+  const [recentCurrentPage, setRecentCurrentPage] = useState(1);
+  const [recentTotalPages, setRecentTotalPages] = useState(1);
+  const [recentTotalResults, setRecentTotalResults] = useState(0);
+
   useEffect(() => {
     // Fetch data when component mounts
     const fetchData = async () => {
@@ -34,13 +42,18 @@ function HomePage() {
         // Fetch data in parallel
         const [searchesData, popularData, recentData] = await Promise.all([
           searchService.getPopularSearches(),
-          recipeService.getPopularRecipes(),
-          recipeService.getRecentRecipes()
+          recipeService.getRecipes({ page: popularCurrentPage, sort: 'rating' }),
+          recipeService.getRecipes({ page: recentCurrentPage, sort: 'createdAt' })
         ]);
         
         setPopularSearches(searchesData);
-        setPopularRecipes(popularData);
-        setRecentRecipes(recentData);
+        setPopularRecipes(popularData.recipes);
+        setPopularTotalPages(popularData.pages);
+        setPopularTotalResults(popularData.total);
+        
+        setRecentRecipes(recentData.recipes);
+        setRecentTotalPages(recentData.pages);
+        setRecentTotalResults(recentData.total);
 
         // If user is authenticated, fetch their favorites and bookmarks
         if (isAuthenticated) {
@@ -60,7 +73,7 @@ function HomePage() {
     };
     
     fetchData();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, popularCurrentPage, recentCurrentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -75,6 +88,14 @@ function HomePage() {
 
   const isRecipeBookmarked = (recipeId) => {
     return bookmarkedRecipes.some(recipe => recipe._id === recipeId);
+  };
+
+  const handlePopularPageChange = (page) => {
+    setPopularCurrentPage(page);
+  };
+
+  const handleRecentPageChange = (page) => {
+    setRecentCurrentPage(page);
   };
 
   return (
@@ -157,6 +178,20 @@ function HomePage() {
                   />
                 ))}
               </SimpleGrid>
+              
+              <Group position="center" mt="xl">
+                <Pagination 
+                  value={popularCurrentPage} 
+                  onChange={handlePopularPageChange} 
+                  total={popularTotalPages} 
+                  withEdges 
+                  size="md"
+                />
+              </Group>
+              
+              <Text ta="center" c="dimmed" mt="md">
+                Showing {popularRecipes.length} of {popularTotalResults} popular recipes
+              </Text>
             </Box>
 
             {/* Recent Recipes Section */}
@@ -176,6 +211,20 @@ function HomePage() {
                   />
                 ))}
               </SimpleGrid>
+              
+              <Group position="center" mt="xl">
+                <Pagination 
+                  value={recentCurrentPage} 
+                  onChange={handleRecentPageChange} 
+                  total={recentTotalPages} 
+                  withEdges 
+                  size="md"
+                />
+              </Group>
+              
+              <Text ta="center" c="dimmed" mt="md">
+                Showing {recentRecipes.length} of {recentTotalResults} recent recipes
+              </Text>
             </Box>
           </>
         )}
